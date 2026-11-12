@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="QuickSplit">
+  <defs>
+    <linearGradient id="qs-bg" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7C5CFC"/>
+      <stop offset="1" stop-color="#2EC4B6"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#qs-bg)"/>
+  <path d="M18 22h28v4.5H28.8L40 44h-6.2L22.4 26.5H18V22z" fill="#FFF8EF"/>
+  <circle cx="44" cy="20" r="5" fill="#FFD166"/>
+</svg>
