@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="QuickSplit — a modern bill and tip calculator for splitting checks in Indian Rupees." />
+  <title>QuickSplit — Bill & Tip Calculator</title>
+  <style>
+    :root {
+      --bg-deep: #07111f;
+      --bg-mid: #0b1a2e;
+      --surface: #12233a;
+      --surface-raised: #173049;
+      --border: rgba(120, 200, 220, 0.16);
+      --border-strong: rgba(94, 234, 212, 0.45);
+      --text: #e8f4f8;
+      --text-muted: #9bb4c4;
+      --accent: #2dd4bf;
+      --accent-soft: rgba(45, 212, 191, 0.14);
+      --accent-glow: rgba(45, 212, 191, 0.28);
+      --danger: #fb7185;
+      --radius: 18px;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      --font-display: "Segoe UI Variable Display", "Segoe UI", "Candara", "Trebuchet MS", sans-serif;
+      --font-body: "Segoe UI Variable Text", "Segoe UI", "Candara", sans-serif;
+      --font-mono: "Cascadia Mono", "Consolas", "Courier New", monospace;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(1200px 700px at 10% -10%, rgba(34, 211, 238, 0.16), transparent 55%),
+        radial-gradient(900px 600px at 100% 0%, rgba(45, 212, 191, 0.12), transparent 50%),
+        radial-gradient(800px 500px at 50% 100%, rgba(14, 116, 144, 0.18), transparent 55%),
+        linear-gradient(165deg, var(--bg-deep) 0%, var(--bg-mid) 55%, #0a1628 100%);
+      background-attachment: fixed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .app {
+      width: min(100%, 440px);
+      background: linear-gradient(180deg, rgba(23, 48, 73, 0.92), rgba(18, 35, 58, 0.96));
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 6px);
+      box-shadow: var(--shadow);
+      padding: 1.75rem 1.5rem 1.5rem;
+      backdrop-filter: blur(10px);
+      animation: rise-in 0.55s ease-out both;
+    }
+
+    @keyframes rise-in {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 6vw, 2.55rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      background: linear-gradient(120deg, #f0fdfa 10%, var(--accent) 55%, #67e8f9 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .brand p {
+      margin: 0.45rem 0 0;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .field {
+      margin-bottom: 1.25rem;
+    }
+
+    .field-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    label,
+    .label-text {
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: var(--danger);
+      opacity: 0;
+      transform: translateY(-2px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .hint.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .input-shell {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .input-shell:focus-within {
+      border-color: var(--border-strong);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .input-shell.invalid {
+      border-color: rgba(251, 113, 133, 0.55);
+      box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.18);
+    }
+
+    .affix {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 1.05rem;
+      user-select: none;
+    }
+
+    input[type="number"],
+    input[type="text"] {
+      width: 100%;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      font-size: 1.15rem;
+      font-variant-numeric: tabular-nums;
+      font-family: var(--font-mono);
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    input::placeholder {
+      color: #5f7a8c;
+    }
+
+    .tip-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.55rem;
+    }
+
+    .tip-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 0.75rem 0.35rem;
+      font: inherit;
+      font-weight: 650;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+    }
+
+    .tip-btn:hover {
+      border-color: var(--border-strong);
+      background: var(--surface-raised);
+    }
+
+    .tip-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .tip-btn[aria-pressed="true"] {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: #99f6e4;
+      box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.35);
+    }
+
+    .tip-btn:active {
+      transform: scale(0.97);
+    }
+
+    .custom-tip {
+      margin-top: 0.65rem;
+    }
+
+    .custom-tip.is-active:not(.invalid) {
+      border-color: var(--border-strong);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    fieldset.field {
+      border: 0;
+      padding: 0;
+      margin: 0 0 1.25rem;
+      min-inline-size: 0;
+    }
+
+
+    .results {
+      margin-top: 0.35rem;
+      margin-bottom: 1.15rem;
+      padding: 1.15rem;
+      border-radius: var(--radius);
+      background:
+        linear-gradient(160deg, rgba(45, 212, 191, 0.1), transparent 45%),
+        linear-gradient(180deg, #0d1f33, #0a1829);
+      border: 1px solid var(--border);
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      padding: 0.45rem 0;
+    }
+
+    .result-row + .result-row {
+      border-top: 1px solid rgba(120, 200, 220, 0.1);
+    }
+
+    .result-label {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    .result-value {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text);
+      transition: color 0.2s ease;
+    }
+
+    .per-person {
+      margin-top: 0.85rem;
+      padding: 1.1rem 1rem;
+      border-radius: 14px;
+      text-align: center;
+      background: var(--accent-soft);
+      border: 1px solid rgba(45, 212, 191, 0.35);
+      animation: soft-pulse 3.5s ease-in-out infinite;
+    }
+
+    @keyframes soft-pulse {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(45, 212, 191, 0);
+      }
+      50% {
+        box-shadow: 0 0 28px rgba(45, 212, 191, 0.18);
+      }
+    }
+
+    .per-person-label {
+      display: block;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #99f6e4;
+      margin-bottom: 0.35rem;
+      font-weight: 650;
+    }
+
+    .per-person-value {
+      display: block;
+      font-family: var(--font-display);
+      font-size: clamp(1.85rem, 7vw, 2.35rem);
+      font-weight: 750;
+      letter-spacing: -0.02em;
+      color: #ecfeff;
+      line-height: 1.15;
+      transition: transform 0.2s ease;
+    }
+
+    .per-person-value.tick {
+      transform: scale(1.03);
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .reset-btn {
+      appearance: none;
+      width: 100%;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      font: inherit;
+      font-weight: 650;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .reset-btn:hover {
+      color: var(--text);
+      border-color: var(--border-strong);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .reset-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 380px) {
+      body {
+        padding: 1rem;
+      }
+
+      .app {
+        padding: 1.35rem 1.1rem 1.15rem;
+      }
+
+      .tip-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" aria-labelledby="app-title">
+    <header class="brand">
+      <h1 id="app-title">QuickSplit</h1>
+      <p>Split the bill. Tip fairly. Done.</p>
+    </header>
+
+    <form id="split-form" novalidate>
+      <div class="field">
+        <div class="field-label">
+          <label for="bill">Bill amount</label>
+          <span class="hint" id="bill-hint" role="status" aria-live="polite"></span>
+        </div>
+        <div class="input-shell" id="bill-shell">
+          <span class="affix" aria-hidden="true">₹</span>
+          <input
+            id="bill"
+            name="bill"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            autocomplete="off"
+            aria-describedby="bill-hint"
+          />
+        </div>
+      </div>
+
+      <fieldset class="field">
+        <legend class="sr-only">Tip</legend>
+        <div class="field-label">
+          <span class="label-text" id="tip-label">Tip</span>
+          <span class="hint" id="tip-hint" role="status" aria-live="polite"></span>
+        </div>
+        <div class="tip-grid" role="group" aria-labelledby="tip-label">
+          <button type="button" class="tip-btn" data-tip="5" aria-pressed="false">5%</button>
+          <button type="button" class="tip-btn" data-tip="10" aria-pressed="false">10%</button>
+          <button type="button" class="tip-btn" data-tip="15" aria-pressed="true">15%</button>
+          <button type="button" class="tip-btn" data-tip="20" aria-pressed="false">20%</button>
+        </div>
+        <div class="custom-tip input-shell" id="custom-tip-shell">
+          <label class="sr-only" for="custom-tip">Custom tip percentage</label>
+          <input
+            id="custom-tip"
+            name="custom-tip"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="0.1"
+            placeholder="Custom %"
+            autocomplete="off"
+            aria-describedby="tip-hint"
+          />
+          <span class="affix" aria-hidden="true">%</span>
+        </div>
+      </fieldset>
+
+      <div class="field">
+        <div class="field-label">
+          <label for="people">People</label>
+          <span class="hint" id="people-hint" role="status" aria-live="polite"></span>
+        </div>
+        <div class="input-shell" id="people-shell">
+          <input
+            id="people"
+            name="people"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            step="1"
+            value="1"
+            placeholder="1"
+            autocomplete="off"
+            aria-describedby="people-hint"
+          />
+        </div>
+      </div>
+    </form>
+
+    <section class="results" aria-live="polite" aria-atomic="true" aria-label="Calculation results">
+      <div class="result-row">
+        <span class="result-label">Tip amount</span>
+        <span class="result-value" id="tip-amount">₹0.00</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Total bill</span>
+        <span class="result-value" id="total-bill">₹0.00</span>
+      </div>
+      <div class="per-person">
+        <span class="per-person-label">Per person</span>
+        <span class="per-person-value" id="per-person">₹0.00</span>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button type="button" class="reset-btn" id="reset-btn">Reset</button>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var DEFAULT_TIP = 15;
+      var DEFAULT_PEOPLE = 1;
+
+      var billInput = document.getElementById("bill");
+      var customTipInput = document.getElementById("custom-tip");
+      var peopleInput = document.getElementById("people");
+      var tipButtons = Array.prototype.slice.call(document.querySelectorAll(".tip-btn"));
+      var resetBtn = document.getElementById("reset-btn");
+
+      var billShell = document.getElementById("bill-shell");
+      var customTipShell = document.getElementById("custom-tip-shell");
+      var peopleShell = document.getElementById("people-shell");
+
+      var billHint = document.getElementById("bill-hint");
+      var tipHint = document.getElementById("tip-hint");
+      var peopleHint = document.getElementById("people-hint");
+
+      var tipAmountEl = document.getElementById("tip-amount");
+      var totalBillEl = document.getElementById("total-bill");
+      var perPersonEl = document.getElementById("per-person");
+
+      var selectedTip = DEFAULT_TIP;
+      var usingCustomTip = false;
+
+      var currencyFormatter = new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+
+      function formatCurrency(value) {
+        if (!Number.isFinite(value)) {
+          return currencyFormatter.format(0);
+        }
+        return currencyFormatter.format(value);
+      }
+
+      function parseNonNegativeNumber(raw) {
+        if (raw === null || raw === undefined) return null;
+        var trimmed = String(raw).trim();
+        if (trimmed === "") return null;
+        var value = Number(trimmed);
+        if (!Number.isFinite(value) || value < 0) return NaN;
+        return value;
+      }
+
+      function parsePositiveInteger(raw) {
+        if (raw === null || raw === undefined) return null;
+        var trimmed = String(raw).trim();
+        if (trimmed === "") return null;
+        if (!/^\d+$/.test(trimmed)) return NaN;
+        var value = Number(trimmed);
+        if (!Number.isFinite(value) || value < 1) return NaN;
+        return value;
+      }
+
+      function setHint(el, shell, message) {
+        el.textContent = message || "";
+        el.classList.toggle("visible", Boolean(message));
+        if (shell) {
+          shell.classList.toggle("invalid", Boolean(message));
+        }
+      }
+
+      function setPressedStates() {
+        tipButtons.forEach(function (btn) {
+          var tip = Number(btn.getAttribute("data-tip"));
+          var pressed = !usingCustomTip && tip === selectedTip;
+          btn.setAttribute("aria-pressed", pressed ? "true" : "false");
+        });
+
+        customTipShell.classList.toggle("is-active", usingCustomTip);
+      }
+
+      function getTipPercent() {
+        if (usingCustomTip) {
+          var custom = parseNonNegativeNumber(customTipInput.value);
+          if (custom === null) return { value: null, error: "Enter a tip %" };
+          if (Number.isNaN(custom)) return { value: null, error: "Invalid tip %" };
+          return { value: custom, error: "" };
+        }
+        return { value: selectedTip, error: "" };
+      }
+
+      function calculate() {
+        var billRaw = parseNonNegativeNumber(billInput.value);
+        var peopleRaw = parsePositiveInteger(peopleInput.value);
+        var tipInfo = getTipPercent();
+
+        var billError = "";
+        var peopleError = "";
+
+        if (billRaw !== null && Number.isNaN(billRaw)) {
+          billError = "Enter a valid amount";
+        }
+
+        if (peopleRaw !== null && Number.isNaN(peopleRaw)) {
+          peopleError = "Whole number ≥ 1";
+        } else if (peopleRaw === null) {
+          peopleError = "Required";
+        }
+
+        setHint(billHint, billShell, billError);
+        setHint(peopleHint, peopleShell, peopleError);
+        setHint(tipHint, customTipShell, usingCustomTip ? tipInfo.error : "");
+
+        var bill = billRaw === null || Number.isNaN(billRaw) ? 0 : billRaw;
+        var tipPercent = tipInfo.value === null ? 0 : tipInfo.value;
+        var people = peopleRaw === null || Number.isNaN(peopleRaw) ? null : peopleRaw;
+
+        var tipAmount = bill * (tipPercent / 100);
+        var total = bill + tipAmount;
+        var perPerson = people ? total / people : null;
+
+        if (!Number.isFinite(tipAmount)) tipAmount = 0;
+        if (!Number.isFinite(total)) total = 0;
+        if (perPerson !== null && !Number.isFinite(perPerson)) perPerson = null;
+
+        tipAmountEl.textContent = formatCurrency(tipAmount);
+        totalBillEl.textContent = formatCurrency(total);
+
+        var nextPerPerson = perPerson === null ? "—" : formatCurrency(perPerson);
+        if (perPersonEl.textContent !== nextPerPerson) {
+          perPersonEl.textContent = nextPerPerson;
+          perPersonEl.classList.remove("tick");
+          void perPersonEl.offsetWidth;
+          perPersonEl.classList.add("tick");
+        }
+      }
+
+      tipButtons.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          usingCustomTip = false;
+          selectedTip = Number(btn.getAttribute("data-tip"));
+          customTipInput.value = "";
+          setPressedStates();
+          calculate();
+        });
+      });
+
+      customTipInput.addEventListener("input", function () {
+        var raw = customTipInput.value.trim();
+        if (raw === "") {
+          usingCustomTip = false;
+          selectedTip = DEFAULT_TIP;
+        } else {
+          usingCustomTip = true;
+        }
+        setPressedStates();
+        calculate();
+      });
+
+      billInput.addEventListener("input", calculate);
+      peopleInput.addEventListener("input", calculate);
+
+      document.getElementById("split-form").addEventListener("submit", function (event) {
+        event.preventDefault();
+      });
+
+      function resetAll() {
+        billInput.value = "";
+        customTipInput.value = "";
+        peopleInput.value = String(DEFAULT_PEOPLE);
+        selectedTip = DEFAULT_TIP;
+        usingCustomTip = false;
+        setPressedStates();
+        setHint(billHint, billShell, "");
+        setHint(tipHint, customTipShell, "");
+        setHint(peopleHint, peopleShell, "");
+        calculate();
+        billInput.focus();
+      }
+
+      resetBtn.addEventListener("click", resetAll);
+
+      setPressedStates();
+      calculate();
+    })();
+  </script>
+</body>
+</html>
