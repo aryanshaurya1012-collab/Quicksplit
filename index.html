@@ -3,854 +3,390 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="QuickSplit — a modern bill and tip calculator for splitting checks in Indian Rupees." />
+  <meta name="description" content="QuickSplit — a playful bill and tip calculator for splitting checks fairly with friends." />
+  <meta name="theme-color" content="#6d4aff" />
   <title>QuickSplit — Bill & Tip Calculator</title>
-  <style>
-    :root {
-      --bg-deep: #07111f;
-      --bg-mid: #0b1a2e;
-      --surface: #12233a;
-      --surface-raised: #173049;
-      --border: rgba(120, 200, 220, 0.16);
-      --border-strong: rgba(94, 234, 212, 0.45);
-      --text: #e8f4f8;
-      --text-muted: #9bb4c4;
-      --accent: #2dd4bf;
-      --accent-soft: rgba(45, 212, 191, 0.14);
-      --accent-glow: rgba(45, 212, 191, 0.28);
-      --danger: #fb7185;
-      --radius: 18px;
-      --shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-      --font-display: "Segoe UI Variable Display", "Segoe UI", "Candara", "Trebuchet MS", sans-serif;
-      --font-body: "Segoe UI Variable Text", "Segoe UI", "Candara", sans-serif;
-      --font-mono: "Cascadia Mono", "Consolas", "Courier New", monospace;
-    }
-
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
-    html {
-      -webkit-text-size-adjust: 100%;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: var(--font-body);
-      color: var(--text);
-      background:
-        radial-gradient(1200px 700px at 10% -10%, rgba(34, 211, 238, 0.16), transparent 55%),
-        radial-gradient(900px 600px at 100% 0%, rgba(45, 212, 191, 0.12), transparent 50%),
-        radial-gradient(800px 500px at 50% 100%, rgba(14, 116, 144, 0.18), transparent 55%),
-        linear-gradient(165deg, var(--bg-deep) 0%, var(--bg-mid) 55%, #0a1628 100%);
-      background-attachment: fixed;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem;
-      line-height: 1.5;
-    }
-
-    .app {
-      width: min(100%, 440px);
-      background: linear-gradient(180deg, rgba(23, 48, 73, 0.92), rgba(18, 35, 58, 0.96));
-      border: 1px solid var(--border);
-      border-radius: calc(var(--radius) + 6px);
-      box-shadow: var(--shadow);
-      padding: 1.75rem 1.5rem 1.5rem;
-      backdrop-filter: blur(10px);
-      animation: rise-in 0.55s ease-out both;
-    }
-
-    @keyframes rise-in {
-      from {
-        opacity: 0;
-        transform: translateY(14px);
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Outfit:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem("quicksplit-theme");
+        var theme = stored === "light" || stored === "dark"
+          ? stored
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch (error) {
+        document.documentElement.setAttribute("data-theme", "light");
       }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .brand {
-      text-align: center;
-      margin-bottom: 1.75rem;
-    }
-
-    .brand h1 {
-      margin: 0;
-      font-family: var(--font-display);
-      font-size: clamp(2rem, 6vw, 2.55rem);
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      background: linear-gradient(120deg, #f0fdfa 10%, var(--accent) 55%, #67e8f9 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .brand p {
-      margin: 0.45rem 0 0;
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-
-    .field {
-      margin-bottom: 1.25rem;
-    }
-
-    .field-label {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 0.75rem;
-      margin-bottom: 0.5rem;
-    }
-
-    label,
-    .label-text {
-      font-size: 0.82rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-    }
-
-    .hint {
-      font-size: 0.75rem;
-      color: var(--danger);
-      opacity: 0;
-      transform: translateY(-2px);
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-
-    .hint.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .input-shell {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      background: var(--bg-deep);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 0.85rem 1rem;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .input-shell:focus-within {
-      border-color: var(--border-strong);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-
-    .input-shell.invalid {
-      border-color: rgba(251, 113, 133, 0.55);
-      box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.18);
-    }
-
-    .affix {
-      color: var(--accent);
-      font-weight: 700;
-      font-size: 1.05rem;
-      user-select: none;
-    }
-
-    input[type="number"],
-    input[type="text"] {
-      width: 100%;
-      border: 0;
-      outline: none;
-      background: transparent;
-      color: var(--text);
-      font: inherit;
-      font-size: 1.15rem;
-      font-variant-numeric: tabular-nums;
-      font-family: var(--font-mono);
-    }
-
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-
-    input[type="number"] {
-      -moz-appearance: textfield;
-      appearance: textfield;
-    }
-
-    input::placeholder {
-      color: #5f7a8c;
-    }
-
-    .tip-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.55rem;
-    }
-
-    .tip-btn {
-      appearance: none;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      border-radius: 12px;
-      padding: 0.75rem 0.35rem;
-      font: inherit;
-      font-weight: 650;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
-    }
-
-    .tip-btn:hover {
-      border-color: var(--border-strong);
-      background: var(--surface-raised);
-    }
-
-    .tip-btn:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-
-    .tip-btn[aria-pressed="true"] {
-      background: var(--accent-soft);
-      border-color: var(--accent);
-      color: #99f6e4;
-      box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.35);
-    }
-
-    .tip-btn:active {
-      transform: scale(0.97);
-    }
-
-    .custom-tip {
-      margin-top: 0.65rem;
-    }
-
-    .custom-tip.is-active:not(.invalid) {
-      border-color: var(--border-strong);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-
-    fieldset.field {
-      border: 0;
-      padding: 0;
-      margin: 0 0 1.25rem;
-      min-inline-size: 0;
-    }
-
-
-    .results {
-      margin-top: 0.35rem;
-      margin-bottom: 1.15rem;
-      padding: 1.15rem;
-      border-radius: var(--radius);
-      background:
-        linear-gradient(160deg, rgba(45, 212, 191, 0.1), transparent 45%),
-        linear-gradient(180deg, #0d1f33, #0a1829);
-      border: 1px solid var(--border);
-    }
-
-    .result-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 1rem;
-      padding: 0.45rem 0;
-    }
-
-    .result-row + .result-row {
-      border-top: 1px solid rgba(120, 200, 220, 0.1);
-    }
-
-    .result-label {
-      color: var(--text-muted);
-      font-size: 0.92rem;
-    }
-
-    .result-value {
-      font-family: var(--font-mono);
-      font-variant-numeric: tabular-nums;
-      font-weight: 600;
-      font-size: 1rem;
-      color: var(--text);
-      transition: color 0.2s ease;
-    }
-
-    .per-person {
-      margin-top: 0.85rem;
-      padding: 1.1rem 1rem;
-      border-radius: 14px;
-      text-align: center;
-      background: var(--accent-soft);
-      border: 1px solid rgba(45, 212, 191, 0.35);
-      animation: soft-pulse 3.5s ease-in-out infinite;
-    }
-
-    @keyframes soft-pulse {
-      0%, 100% {
-        box-shadow: 0 0 0 0 rgba(45, 212, 191, 0);
-      }
-      50% {
-        box-shadow: 0 0 28px rgba(45, 212, 191, 0.18);
-      }
-    }
-
-    .per-person-label {
-      display: block;
-      font-size: 0.78rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #99f6e4;
-      margin-bottom: 0.35rem;
-      font-weight: 650;
-    }
-
-    .per-person-value {
-      display: block;
-      font-family: var(--font-display);
-      font-size: clamp(1.85rem, 7vw, 2.35rem);
-      font-weight: 750;
-      letter-spacing: -0.02em;
-      color: #ecfeff;
-      line-height: 1.15;
-      transition: transform 0.2s ease;
-    }
-
-    .per-person-value.tick {
-      transform: scale(1.03);
-    }
-
-    .actions {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    .reset-btn,
-    .copy-btn {
-      appearance: none;
-      flex: 1 1 140px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text-muted);
-      border-radius: 12px;
-      padding: 0.9rem 1rem;
-      font: inherit;
-      font-weight: 650;
-      letter-spacing: 0.03em;
-      cursor: pointer;
-      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .reset-btn:hover,
-    .copy-btn:hover:not(:disabled) {
-      color: var(--text);
-      border-color: var(--border-strong);
-      background: rgba(255, 255, 255, 0.03);
-    }
-
-    .reset-btn:focus-visible,
-    .copy-btn:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-
-    .copy-btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    .copy-btn.is-success {
-      color: #99f6e4;
-      border-color: var(--accent);
-      background: var(--accent-soft);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-
-    .copy-status {
-      margin: 0.7rem 0 0;
-      min-height: 1.2em;
-      text-align: center;
-      font-size: 0.82rem;
-      color: var(--accent);
-      opacity: 0;
-      transform: translateY(-2px);
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-
-    .copy-status.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    @media (max-width: 380px) {
-      body {
-        padding: 1rem;
-      }
-
-      .app {
-        padding: 1.35rem 1.1rem 1.15rem;
-      }
-
-      .tip-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        animation: none !important;
-        transition: none !important;
-      }
-    }
-  </style>
+    })();
+  </script>
 </head>
 <body>
-  <main class="app" aria-labelledby="app-title">
-    <header class="brand">
-      <h1 id="app-title">QuickSplit</h1>
-      <p>Split the bill. Tip fairly. Done.</p>
-    </header>
+  <a class="sr-only" href="#calculator">Skip to calculator</a>
 
-    <form id="split-form" novalidate>
-      <div class="field">
-        <div class="field-label">
-          <label for="bill">Bill amount</label>
-          <span class="hint" id="bill-hint" role="status" aria-live="polite"></span>
-        </div>
-        <div class="input-shell" id="bill-shell">
-          <span class="affix" aria-hidden="true">₹</span>
-          <input
-            id="bill"
-            name="bill"
-            type="number"
-            inputmode="decimal"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-            autocomplete="off"
-            aria-describedby="bill-hint"
-          />
-        </div>
-      </div>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand-link" href="#top" aria-label="QuickSplit home">
+        <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+          <defs>
+            <linearGradient id="brand-grad" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#7C5CFC" />
+              <stop offset="1" stop-color="#2EC4B6" />
+            </linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#brand-grad)" />
+          <path d="M18 22h28v4.5H28.8L40 44h-6.2L22.4 26.5H18V22z" fill="#FFF8EF" />
+          <circle cx="44" cy="20" r="5" fill="#FFD166" />
+        </svg>
+        <span class="brand-name">QuickSplit</span>
+      </a>
 
-      <fieldset class="field">
-        <legend class="sr-only">Tip</legend>
-        <div class="field-label">
-          <span class="label-text" id="tip-label">Tip</span>
-          <span class="hint" id="tip-hint" role="status" aria-live="polite"></span>
-        </div>
-        <div class="tip-grid" role="group" aria-labelledby="tip-label">
-          <button type="button" class="tip-btn" data-tip="5" aria-pressed="false">5%</button>
-          <button type="button" class="tip-btn" data-tip="10" aria-pressed="false">10%</button>
-          <button type="button" class="tip-btn" data-tip="15" aria-pressed="true">15%</button>
-          <button type="button" class="tip-btn" data-tip="20" aria-pressed="false">20%</button>
-        </div>
-        <div class="custom-tip input-shell" id="custom-tip-shell">
-          <label class="sr-only" for="custom-tip">Custom tip percentage</label>
-          <input
-            id="custom-tip"
-            name="custom-tip"
-            type="number"
-            inputmode="decimal"
-            min="0"
-            step="0.1"
-            placeholder="Custom %"
-            autocomplete="off"
-            aria-describedby="tip-hint"
-          />
-          <span class="affix" aria-hidden="true">%</span>
-        </div>
-      </fieldset>
+      <nav id="site-nav" class="site-nav" aria-label="Primary">
+        <a href="#calculator" data-nav-link>Calculator</a>
+        <a href="#how-it-works" data-nav-link>How it works</a>
+        <a href="#about" data-nav-link>About</a>
+      </nav>
 
-      <div class="field">
-        <div class="field-label">
-          <label for="people">People</label>
-          <span class="hint" id="people-hint" role="status" aria-live="polite"></span>
-        </div>
-        <div class="input-shell" id="people-shell">
-          <input
-            id="people"
-            name="people"
-            type="number"
-            inputmode="numeric"
-            min="1"
-            step="1"
-            value="1"
-            placeholder="1"
-            autocomplete="off"
-            aria-describedby="people-hint"
-          />
-        </div>
-      </div>
-    </form>
+      <div class="header-actions">
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Switch to dark theme">
+          <svg class="theme-toggle-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 3v2.2M12 18.8V21M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M3 12h2.2M18.8 12H21M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            <circle cx="12" cy="12" r="3.4" stroke="currentColor" stroke-width="1.8" />
+          </svg>
+          <span class="theme-toggle-label">Dark</span>
+        </button>
 
-    <section class="results" aria-live="polite" aria-atomic="true" aria-label="Calculation results">
-      <div class="result-row">
-        <span class="result-label">Tip amount</span>
-        <span class="result-value" id="tip-amount">₹0.00</span>
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+          <span class="nav-toggle-bars" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
       </div>
-      <div class="result-row">
-        <span class="result-label">Total bill</span>
-        <span class="result-value" id="total-bill">₹0.00</span>
-      </div>
-      <div class="per-person">
-        <span class="per-person-label">Per person</span>
-        <span class="per-person-value" id="per-person">₹0.00</span>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="container hero-grid">
+        <div>
+          <p class="hero-kicker"><span class="hero-kicker-dot" aria-hidden="true"></span> QuickSplit</p>
+          <h1 id="hero-title">Good food. Great company. No awkward math.</h1>
+          <p class="hero-lead">Split the bill, share the smiles.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" id="start-split-btn" href="#calculator">Start splitting</a>
+            <a class="btn btn-ghost" href="#how-it-works">See how it works</a>
+          </div>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+          <span class="hero-orb hero-orb-a"></span>
+          <span class="hero-orb hero-orb-b"></span>
+          <svg class="hero-plate" viewBox="0 0 320 320" fill="none">
+            <circle cx="160" cy="160" r="138" fill="url(#plate-grad)" opacity="0.95" />
+            <circle cx="160" cy="160" r="108" stroke="#fff8ef" stroke-width="10" opacity="0.55" />
+            <path d="M98 168c18-42 48-62 78-62s60 20 78 62" stroke="#fff8ef" stroke-width="10" stroke-linecap="round" />
+            <circle cx="128" cy="132" r="10" fill="#FF6B6B" />
+            <circle cx="188" cy="124" r="14" fill="#FFD166" />
+            <circle cx="166" cy="168" r="18" fill="#1FB8A8" />
+            <rect x="236" y="78" width="42" height="12" rx="6" transform="rotate(28 236 78)" fill="#6D4AFF" />
+            <defs>
+              <linearGradient id="plate-grad" x1="60" y1="40" x2="260" y2="280" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#7C5CFC" />
+                <stop offset="0.55" stop-color="#FF6B6B" />
+                <stop offset="1" stop-color="#1FB8A8" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
       </div>
     </section>
 
-    <div class="actions">
-      <button type="button" class="reset-btn" id="reset-btn">Reset</button>
-      <button type="button" class="copy-btn" id="copy-btn" disabled>Copy Summary</button>
-    </div>
-    <p class="copy-status" id="copy-status" role="status" aria-live="polite"></p>
+    <section class="section" id="calculator" aria-labelledby="calculator-title">
+      <div class="container">
+        <header class="section-header">
+          <p class="section-eyebrow">Calculator</p>
+          <h2 id="calculator-title">Split any bill in seconds</h2>
+          <p>Enter the amount, pick a tip, choose your people — watch the receipt update live.</p>
+        </header>
+
+        <div class="calculator-layout">
+          <div class="panel">
+            <h3 class="panel-title">Your bill</h3>
+            <form id="split-form" novalidate>
+              <div class="field">
+                <div class="field-label">
+                  <label for="bill">Bill amount</label>
+                  <span class="hint" id="bill-hint" role="status" aria-live="polite"></span>
+                </div>
+                <div class="input-shell" id="bill-shell">
+                  <span class="affix" id="currency-symbol" aria-hidden="true">₹</span>
+                  <input
+                    id="bill"
+                    name="bill"
+                    type="number"
+                    inputmode="decimal"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    autocomplete="off"
+                    aria-describedby="bill-hint"
+                  />
+                </div>
+              </div>
+
+              <div class="field">
+                <div class="field-label">
+                  <label for="currency">Currency</label>
+                </div>
+                <div class="select-shell">
+                  <select id="currency" name="currency" aria-describedby="currency-note">
+                    <option value="INR">INR (₹)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                  </select>
+                </div>
+                <p id="currency-note" class="sr-only">
+                  Currency changes formatting only. Amounts are not converted between currencies.
+                </p>
+              </div>
+
+              <fieldset class="field">
+                <legend class="sr-only">Tip</legend>
+                <div class="field-label">
+                  <span class="label-text" id="tip-label">Tip</span>
+                  <span class="hint" id="tip-hint" role="status" aria-live="polite"></span>
+                </div>
+                <div class="tip-grid" role="group" aria-labelledby="tip-label">
+                  <button type="button" class="tip-btn" data-tip="5" aria-pressed="false">5%</button>
+                  <button type="button" class="tip-btn" data-tip="10" aria-pressed="false">10%</button>
+                  <button type="button" class="tip-btn" data-tip="15" aria-pressed="true">15%</button>
+                  <button type="button" class="tip-btn" data-tip="20" aria-pressed="false">20%</button>
+                </div>
+                <div class="custom-tip input-shell" id="custom-tip-shell">
+                  <label class="sr-only" for="custom-tip">Custom tip percentage</label>
+                  <input
+                    id="custom-tip"
+                    name="custom-tip"
+                    type="number"
+                    inputmode="decimal"
+                    min="0"
+                    step="0.1"
+                    placeholder="Custom %"
+                    autocomplete="off"
+                    aria-describedby="tip-hint"
+                  />
+                  <span class="affix" aria-hidden="true">%</span>
+                </div>
+              </fieldset>
+
+              <div class="field">
+                <div class="field-label">
+                  <label for="people">People</label>
+                  <span class="hint" id="people-hint" role="status" aria-live="polite"></span>
+                </div>
+                <div class="people-controls">
+                  <button type="button" class="stepper-btn" id="people-minus" aria-label="Decrease number of people">−</button>
+                  <div class="input-shell" id="people-shell">
+                    <input
+                      id="people"
+                      name="people"
+                      type="number"
+                      inputmode="numeric"
+                      min="1"
+                      step="1"
+                      value="1"
+                      placeholder="1"
+                      autocomplete="off"
+                      aria-describedby="people-hint"
+                    />
+                  </div>
+                  <button type="button" class="stepper-btn" id="people-plus" aria-label="Increase number of people">+</button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="panel receipt" aria-live="polite" aria-atomic="true" aria-label="Calculation results">
+            <h3 class="panel-title">Receipt</h3>
+            <div class="result-row">
+              <span class="result-label">Original bill</span>
+              <span class="result-value" id="original-bill">₹0.00</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Tip percentage</span>
+              <span class="result-value" id="tip-percent-display">15%</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Tip amount</span>
+              <span class="result-value" id="tip-amount">₹0.00</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Total bill</span>
+              <span class="result-value" id="total-bill">₹0.00</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">People</span>
+              <span class="result-value" id="people-count-display">1</span>
+            </div>
+            <div class="per-person">
+              <span class="per-person-label">Amount per person</span>
+              <span class="per-person-value" id="per-person">₹0.00</span>
+            </div>
+
+            <div class="actions">
+              <button type="button" class="action-btn" id="copy-btn" disabled>Copy summary</button>
+              <button type="button" class="action-btn action-btn-accent" id="share-btn" disabled>Share summary</button>
+              <button type="button" class="action-btn" id="reset-btn">Reset</button>
+            </div>
+            <p class="action-status" id="action-status" role="status" aria-live="polite"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="how-it-works" aria-labelledby="how-title">
+      <div class="container">
+        <header class="section-header">
+          <p class="section-eyebrow">How it works</p>
+          <h2 id="how-title">Three easy steps</h2>
+          <p>No spreadsheets. No calculator apps. Just a cleaner way to settle up.</p>
+        </header>
+
+        <div class="steps">
+          <article class="step">
+            <span class="step-number">Step 1</span>
+            <svg class="step-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+              <rect x="6" y="10" width="36" height="28" rx="8" fill="#6D4AFF" opacity="0.15" />
+              <path d="M14 24h20M14 30h12" stroke="#6D4AFF" stroke-width="2.5" stroke-linecap="round" />
+              <circle cx="34" cy="16" r="6" fill="#FFD166" />
+            </svg>
+            <h3>Enter the bill</h3>
+            <p>Type the check total and pick a currency for formatting.</p>
+          </article>
+
+          <article class="step">
+            <span class="step-number">Step 2</span>
+            <svg class="step-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+              <circle cx="24" cy="24" r="16" fill="#FF6B6B" opacity="0.16" />
+              <path d="M18 25l5 5 9-12" stroke="#FF6B6B" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <h3>Choose your tip</h3>
+            <p>Tap a preset or enter a custom percentage that fits the night.</p>
+          </article>
+
+          <article class="step">
+            <span class="step-number">Step 3</span>
+            <svg class="step-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+              <circle cx="16" cy="22" r="7" fill="#1FB8A8" opacity="0.25" />
+              <circle cx="32" cy="22" r="7" fill="#6D4AFF" opacity="0.25" />
+              <path d="M10 36c2.5-5 7-8 14-8s11.5 3 14 8" stroke="#1FB8A8" stroke-width="2.5" stroke-linecap="round" />
+            </svg>
+            <h3>Split and enjoy</h3>
+            <p>See everyone’s share instantly, then copy or share the summary.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="recent" aria-labelledby="recent-title">
+      <div class="container">
+        <header class="section-header">
+          <p class="section-eyebrow">Recent splits</p>
+          <h2 id="recent-title">Pick up where you left off</h2>
+          <p>A few recent calculations stay on this device so you can restore them quickly.</p>
+        </header>
+
+        <div class="history-toolbar">
+          <button type="button" class="btn btn-ghost" id="clear-history-btn" disabled>Clear history</button>
+        </div>
+
+        <div class="history-empty" id="history-empty">
+          <svg viewBox="0 0 96 96" fill="none" aria-hidden="true">
+            <rect x="16" y="22" width="64" height="52" rx="12" stroke="currentColor" stroke-width="3" opacity="0.35" />
+            <path d="M30 40h36M30 52h24" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.45" />
+            <circle cx="68" cy="28" r="10" fill="#FFD166" opacity="0.9" />
+          </svg>
+          <p>No recent splits yet. Calculate a bill and it will show up here.</p>
+        </div>
+
+        <div class="history-list" id="history-list" hidden></div>
+      </div>
+    </section>
+
+    <section class="section" id="faq" aria-labelledby="faq-title">
+      <div class="container">
+        <header class="section-header">
+          <p class="section-eyebrow">FAQ</p>
+          <h2 id="faq-title">Quick answers</h2>
+          <p>Simple details about tips, currency formatting, and equal splits.</p>
+        </header>
+
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>How is the tip calculated?</summary>
+            <p>Tip amount equals bill amount × tip percentage ÷ 100. The total bill is the original amount plus that tip.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Does changing currency convert the amount?</summary>
+            <p>No. Currency only changes how numbers are formatted with Intl.NumberFormat. QuickSplit does not perform live exchange-rate conversion.</p>
+          </details>
+          <details class="faq-item">
+            <summary>How does equal splitting work?</summary>
+            <p>The total bill (including tip) is divided evenly by the number of people. Everyone pays the same share.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Where is my history stored?</summary>
+            <p>Recent splits and your theme preference are saved in this browser’s localStorage on your device. Nothing sensitive is uploaded.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="about" aria-labelledby="about-title">
+      <div class="container about-panel">
+        <div class="about-copy">
+          <p class="section-eyebrow">About</p>
+          <h2 class="section-title" id="about-title">Built for dinner tables, not spreadsheets</h2>
+          <p>
+            QuickSplit started as a tiny tip calculator and grew into a friendly companion for group dinners,
+            café catch-ups, and shared rides. Equal splits, clear receipts, zero awkwardness.
+          </p>
+        </div>
+        <svg class="about-art" viewBox="0 0 260 180" fill="none" aria-hidden="true">
+          <rect x="20" y="30" width="150" height="120" rx="18" fill="#6D4AFF" opacity="0.12" />
+          <rect x="70" y="18" width="150" height="120" rx="18" fill="#1FB8A8" opacity="0.14" />
+          <path d="M96 78h78M96 98h52" stroke="#6D4AFF" stroke-width="6" stroke-linecap="round" />
+          <circle cx="196" cy="48" r="16" fill="#FF6B6B" />
+          <circle cx="54" cy="128" r="12" fill="#FFD166" />
+        </svg>
+      </div>
+    </section>
   </main>
 
-  <script>
-    (function () {
-      "use strict";
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <p class="footer-brand">QuickSplit</p>
+        <p class="footer-tagline">Split the bill, share the smiles.</p>
+        <p class="footer-meta">Built with HTML, CSS &amp; vanilla JavaScript.</p>
+      </div>
+      <div class="footer-links">
+        <a href="#calculator">Calculator</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/aryanshaurya1012-collab/Quicksplit" rel="noopener noreferrer" target="_blank">GitHub</a>
+      </div>
+    </div>
+  </footer>
 
-      var DEFAULT_TIP = 15;
-      var DEFAULT_PEOPLE = 1;
-
-      var billInput = document.getElementById("bill");
-      var customTipInput = document.getElementById("custom-tip");
-      var peopleInput = document.getElementById("people");
-      var tipButtons = Array.prototype.slice.call(document.querySelectorAll(".tip-btn"));
-      var resetBtn = document.getElementById("reset-btn");
-      var copyBtn = document.getElementById("copy-btn");
-      var copyStatus = document.getElementById("copy-status");
-
-      var billShell = document.getElementById("bill-shell");
-      var customTipShell = document.getElementById("custom-tip-shell");
-      var peopleShell = document.getElementById("people-shell");
-
-      var billHint = document.getElementById("bill-hint");
-      var tipHint = document.getElementById("tip-hint");
-      var peopleHint = document.getElementById("people-hint");
-
-      var tipAmountEl = document.getElementById("tip-amount");
-      var totalBillEl = document.getElementById("total-bill");
-      var perPersonEl = document.getElementById("per-person");
-
-      var selectedTip = DEFAULT_TIP;
-      var usingCustomTip = false;
-      var copyFeedbackTimer = null;
-
-      var currencyFormatter = new Intl.NumberFormat("en-IN", {
-        style: "currency",
-        currency: "INR",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
-
-      function formatCurrency(value) {
-        if (!Number.isFinite(value)) {
-          return currencyFormatter.format(0);
-        }
-        return currencyFormatter.format(value);
-      }
-
-      function parseNonNegativeNumber(raw) {
-        if (raw === null || raw === undefined) return null;
-        var trimmed = String(raw).trim();
-        if (trimmed === "") return null;
-        var value = Number(trimmed);
-        if (!Number.isFinite(value) || value < 0) return NaN;
-        return value;
-      }
-
-      function parsePositiveInteger(raw) {
-        if (raw === null || raw === undefined) return null;
-        var trimmed = String(raw).trim();
-        if (trimmed === "") return null;
-        if (!/^\d+$/.test(trimmed)) return NaN;
-        var value = Number(trimmed);
-        if (!Number.isFinite(value) || value < 1) return NaN;
-        return value;
-      }
-
-      function setHint(el, shell, message) {
-        el.textContent = message || "";
-        el.classList.toggle("visible", Boolean(message));
-        if (shell) {
-          shell.classList.toggle("invalid", Boolean(message));
-        }
-      }
-
-      function setPressedStates() {
-        tipButtons.forEach(function (btn) {
-          var tip = Number(btn.getAttribute("data-tip"));
-          var pressed = !usingCustomTip && tip === selectedTip;
-          btn.setAttribute("aria-pressed", pressed ? "true" : "false");
-        });
-
-        customTipShell.classList.toggle("is-active", usingCustomTip);
-      }
-
-      function getTipPercent() {
-        if (usingCustomTip) {
-          var custom = parseNonNegativeNumber(customTipInput.value);
-          if (custom === null) return { value: null, error: "Enter a tip %" };
-          if (Number.isNaN(custom)) return { value: null, error: "Invalid tip %" };
-          return { value: custom, error: "" };
-        }
-        return { value: selectedTip, error: "" };
-      }
-
-      function formatTipPercent(value) {
-        if (!Number.isFinite(value)) return "0%";
-        if (Number.isInteger(value)) return value + "%";
-        return String(value) + "%";
-      }
-
-      function getCopyableSplit() {
-        var billRaw = parseNonNegativeNumber(billInput.value);
-        var peopleRaw = parsePositiveInteger(peopleInput.value);
-        var tipInfo = getTipPercent();
-
-        var billEmpty = billRaw === null;
-        var billInvalid = billRaw !== null && Number.isNaN(billRaw);
-        var peopleInvalid = peopleRaw === null || Number.isNaN(peopleRaw);
-        var tipInvalid = Boolean(tipInfo.error);
-
-        if (billEmpty || billInvalid || peopleInvalid || tipInvalid) {
-          return null;
-        }
-
-        var tipAmount = billRaw * (tipInfo.value / 100);
-        var total = billRaw + tipAmount;
-        var perPerson = total / peopleRaw;
-
-        if (!Number.isFinite(tipAmount) || !Number.isFinite(total) || !Number.isFinite(perPerson)) {
-          return null;
-        }
-
-        return {
-          bill: billRaw,
-          tipPercent: tipInfo.value,
-          tipAmount: tipAmount,
-          total: total,
-          people: peopleRaw,
-          perPerson: perPerson
-        };
-      }
-
-      function buildSplitSummary(split) {
-        return [
-          "QuickSplit - Bill Summary",
-          "",
-          "Bill Amount: " + formatCurrency(split.bill),
-          "Tip Percentage: " + formatTipPercent(split.tipPercent),
-          "Tip Amount: " + formatCurrency(split.tipAmount),
-          "Total Bill: " + formatCurrency(split.total),
-          "Number of People: " + split.people,
-          "Amount Per Person: " + formatCurrency(split.perPerson)
-        ].join("\n");
-      }
-
-      function clearCopyFeedback() {
-        if (copyFeedbackTimer) {
-          clearTimeout(copyFeedbackTimer);
-          copyFeedbackTimer = null;
-        }
-        copyBtn.classList.remove("is-success");
-        copyStatus.textContent = "";
-        copyStatus.classList.remove("visible");
-      }
-
-      function showCopySuccess() {
-        clearCopyFeedback();
-        copyBtn.classList.add("is-success");
-        copyStatus.textContent = "Summary copied successfully!";
-        copyStatus.classList.add("visible");
-        copyFeedbackTimer = setTimeout(function () {
-          copyBtn.classList.remove("is-success");
-          copyStatus.classList.remove("visible");
-          copyStatus.textContent = "";
-          copyFeedbackTimer = null;
-        }, 2200);
-      }
-
-      function copyTextFallback(text) {
-        var textarea = document.createElement("textarea");
-        textarea.value = text;
-        textarea.setAttribute("readonly", "");
-        textarea.style.position = "fixed";
-        textarea.style.top = "0";
-        textarea.style.left = "-9999px";
-        textarea.style.opacity = "0";
-        document.body.appendChild(textarea);
-        textarea.focus();
-        textarea.select();
-        textarea.setSelectionRange(0, textarea.value.length);
-
-        var succeeded = false;
-        try {
-          succeeded = document.execCommand("copy");
-        } catch (error) {
-          succeeded = false;
-        }
-
-        document.body.removeChild(textarea);
-        return succeeded;
-      }
-
-      function copyTextToClipboard(text) {
-        if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-          return navigator.clipboard.writeText(text).then(function () {
-            return true;
-          }).catch(function () {
-            return copyTextFallback(text);
-          });
-        }
-
-        return Promise.resolve(copyTextFallback(text));
-      }
-
-      function updateCopyButtonState() {
-        copyBtn.disabled = getCopyableSplit() === null;
-      }
-
-      function calculate() {
-        var billRaw = parseNonNegativeNumber(billInput.value);
-        var peopleRaw = parsePositiveInteger(peopleInput.value);
-        var tipInfo = getTipPercent();
-
-        var billError = "";
-        var peopleError = "";
-
-        if (billRaw !== null && Number.isNaN(billRaw)) {
-          billError = "Enter a valid amount";
-        }
-
-        if (peopleRaw !== null && Number.isNaN(peopleRaw)) {
-          peopleError = "Whole number ≥ 1";
-        } else if (peopleRaw === null) {
-          peopleError = "Required";
-        }
-
-        setHint(billHint, billShell, billError);
-        setHint(peopleHint, peopleShell, peopleError);
-        setHint(tipHint, customTipShell, usingCustomTip ? tipInfo.error : "");
-
-        var bill = billRaw === null || Number.isNaN(billRaw) ? 0 : billRaw;
-        var tipPercent = tipInfo.value === null ? 0 : tipInfo.value;
-        var people = peopleRaw === null || Number.isNaN(peopleRaw) ? null : peopleRaw;
-
-        var tipAmount = bill * (tipPercent / 100);
-        var total = bill + tipAmount;
-        var perPerson = people ? total / people : null;
-
-        if (!Number.isFinite(tipAmount)) tipAmount = 0;
-        if (!Number.isFinite(total)) total = 0;
-        if (perPerson !== null && !Number.isFinite(perPerson)) perPerson = null;
-
-        tipAmountEl.textContent = formatCurrency(tipAmount);
-        totalBillEl.textContent = formatCurrency(total);
-
-        var nextPerPerson = perPerson === null ? "—" : formatCurrency(perPerson);
-        if (perPersonEl.textContent !== nextPerPerson) {
-          perPersonEl.textContent = nextPerPerson;
-          perPersonEl.classList.remove("tick");
-          void perPersonEl.offsetWidth;
-          perPersonEl.classList.add("tick");
-        }
-
-        clearCopyFeedback();
-        updateCopyButtonState();
-      }
-
-      tipButtons.forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          usingCustomTip = false;
-          selectedTip = Number(btn.getAttribute("data-tip"));
-          customTipInput.value = "";
-          setPressedStates();
-          calculate();
-        });
-      });
-
-      customTipInput.addEventListener("input", function () {
-        var raw = customTipInput.value.trim();
-        if (raw === "") {
-          usingCustomTip = false;
-          selectedTip = DEFAULT_TIP;
-        } else {
-          usingCustomTip = true;
-        }
-        setPressedStates();
-        calculate();
-      });
-
-      billInput.addEventListener("input", calculate);
-      peopleInput.addEventListener("input", calculate);
-
-      document.getElementById("split-form").addEventListener("submit", function (event) {
-        event.preventDefault();
-      });
-
-      function resetAll() {
-        billInput.value = "";
-        customTipInput.value = "";
-        peopleInput.value = String(DEFAULT_PEOPLE);
-        selectedTip = DEFAULT_TIP;
-        usingCustomTip = false;
-        setPressedStates();
-        setHint(billHint, billShell, "");
-        setHint(tipHint, customTipShell, "");
-        setHint(peopleHint, peopleShell, "");
-        calculate();
-        billInput.focus();
-      }
-
-      copyBtn.addEventListener("click", function () {
-        var split = getCopyableSplit();
-        if (!split) {
-          updateCopyButtonState();
-          return;
-        }
-
-        var summary = buildSplitSummary(split);
-        copyTextToClipboard(summary).then(function (succeeded) {
-          if (succeeded) {
-            showCopySuccess();
-          } else {
-            clearCopyFeedback();
-            copyStatus.textContent = "Could not copy summary";
-            copyStatus.classList.add("visible");
-          }
-        });
-      });
-
-      resetBtn.addEventListener("click", resetAll);
-
-      setPressedStates();
-      calculate();
-    })();
-  </script>
+  <script src="js/calculator.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/app.js" defer></script>
 </body>
 </html>
