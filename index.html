@@ -331,11 +331,13 @@
     .actions {
       display: flex;
       gap: 0.75rem;
+      flex-wrap: wrap;
     }
 
-    .reset-btn {
+    .reset-btn,
+    .copy-btn {
       appearance: none;
-      width: 100%;
+      flex: 1 1 140px;
       border: 1px solid var(--border);
       background: transparent;
       color: var(--text-muted);
@@ -345,18 +347,48 @@
       font-weight: 650;
       letter-spacing: 0.03em;
       cursor: pointer;
-      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .reset-btn:hover {
+    .reset-btn:hover,
+    .copy-btn:hover:not(:disabled) {
       color: var(--text);
       border-color: var(--border-strong);
       background: rgba(255, 255, 255, 0.03);
     }
 
-    .reset-btn:focus-visible {
+    .reset-btn:focus-visible,
+    .copy-btn:focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
+    }
+
+    .copy-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .copy-btn.is-success {
+      color: #99f6e4;
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .copy-status {
+      margin: 0.7rem 0 0;
+      min-height: 1.2em;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--accent);
+      opacity: 0;
+      transform: translateY(-2px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .copy-status.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .sr-only {
@@ -492,7 +524,9 @@
 
     <div class="actions">
       <button type="button" class="reset-btn" id="reset-btn">Reset</button>
+      <button type="button" class="copy-btn" id="copy-btn" disabled>Copy Summary</button>
     </div>
+    <p class="copy-status" id="copy-status" role="status" aria-live="polite"></p>
   </main>
 
   <script>
@@ -507,6 +541,8 @@
       var peopleInput = document.getElementById("people");
       var tipButtons = Array.prototype.slice.call(document.querySelectorAll(".tip-btn"));
       var resetBtn = document.getElementById("reset-btn");
+      var copyBtn = document.getElementById("copy-btn");
+      var copyStatus = document.getElementById("copy-status");
 
       var billShell = document.getElementById("bill-shell");
       var customTipShell = document.getElementById("custom-tip-shell");
@@ -522,6 +558,7 @@
 
       var selectedTip = DEFAULT_TIP;
       var usingCustomTip = false;
+      var copyFeedbackTimer = null;
 
       var currencyFormatter = new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -584,6 +621,120 @@
         return { value: selectedTip, error: "" };
       }
 
+      function formatTipPercent(value) {
+        if (!Number.isFinite(value)) return "0%";
+        if (Number.isInteger(value)) return value + "%";
+        return String(value) + "%";
+      }
+
+      function getCopyableSplit() {
+        var billRaw = parseNonNegativeNumber(billInput.value);
+        var peopleRaw = parsePositiveInteger(peopleInput.value);
+        var tipInfo = getTipPercent();
+
+        var billEmpty = billRaw === null;
+        var billInvalid = billRaw !== null && Number.isNaN(billRaw);
+        var peopleInvalid = peopleRaw === null || Number.isNaN(peopleRaw);
+        var tipInvalid = Boolean(tipInfo.error);
+
+        if (billEmpty || billInvalid || peopleInvalid || tipInvalid) {
+          return null;
+        }
+
+        var tipAmount = billRaw * (tipInfo.value / 100);
+        var total = billRaw + tipAmount;
+        var perPerson = total / peopleRaw;
+
+        if (!Number.isFinite(tipAmount) || !Number.isFinite(total) || !Number.isFinite(perPerson)) {
+          return null;
+        }
+
+        return {
+          bill: billRaw,
+          tipPercent: tipInfo.value,
+          tipAmount: tipAmount,
+          total: total,
+          people: peopleRaw,
+          perPerson: perPerson
+        };
+      }
+
+      function buildSplitSummary(split) {
+        return [
+          "QuickSplit - Bill Summary",
+          "",
+          "Bill Amount: " + formatCurrency(split.bill),
+          "Tip Percentage: " + formatTipPercent(split.tipPercent),
+          "Tip Amount: " + formatCurrency(split.tipAmount),
+          "Total Bill: " + formatCurrency(split.total),
+          "Number of People: " + split.people,
+          "Amount Per Person: " + formatCurrency(split.perPerson)
+        ].join("\n");
+      }
+
+      function clearCopyFeedback() {
+        if (copyFeedbackTimer) {
+          clearTimeout(copyFeedbackTimer);
+          copyFeedbackTimer = null;
+        }
+        copyBtn.classList.remove("is-success");
+        copyStatus.textContent = "";
+        copyStatus.classList.remove("visible");
+      }
+
+      function showCopySuccess() {
+        clearCopyFeedback();
+        copyBtn.classList.add("is-success");
+        copyStatus.textContent = "Summary copied successfully!";
+        copyStatus.classList.add("visible");
+        copyFeedbackTimer = setTimeout(function () {
+          copyBtn.classList.remove("is-success");
+          copyStatus.classList.remove("visible");
+          copyStatus.textContent = "";
+          copyFeedbackTimer = null;
+        }, 2200);
+      }
+
+      function copyTextFallback(text) {
+        var textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.top = "0";
+        textarea.style.left = "-9999px";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        textarea.setSelectionRange(0, textarea.value.length);
+
+        var succeeded = false;
+        try {
+          succeeded = document.execCommand("copy");
+        } catch (error) {
+          succeeded = false;
+        }
+
+        document.body.removeChild(textarea);
+        return succeeded;
+      }
+
+      function copyTextToClipboard(text) {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+          return navigator.clipboard.writeText(text).then(function () {
+            return true;
+          }).catch(function () {
+            return copyTextFallback(text);
+          });
+        }
+
+        return Promise.resolve(copyTextFallback(text));
+      }
+
+      function updateCopyButtonState() {
+        copyBtn.disabled = getCopyableSplit() === null;
+      }
+
       function calculate() {
         var billRaw = parseNonNegativeNumber(billInput.value);
         var peopleRaw = parsePositiveInteger(peopleInput.value);
@@ -628,6 +779,9 @@
           void perPersonEl.offsetWidth;
           perPersonEl.classList.add("tick");
         }
+
+        clearCopyFeedback();
+        updateCopyButtonState();
       }
 
       tipButtons.forEach(function (btn) {
@@ -672,6 +826,25 @@
         calculate();
         billInput.focus();
       }
+
+      copyBtn.addEventListener("click", function () {
+        var split = getCopyableSplit();
+        if (!split) {
+          updateCopyButtonState();
+          return;
+        }
+
+        var summary = buildSplitSummary(split);
+        copyTextToClipboard(summary).then(function (succeeded) {
+          if (succeeded) {
+            showCopySuccess();
+          } else {
+            clearCopyFeedback();
+            copyStatus.textContent = "Could not copy summary";
+            copyStatus.classList.add("visible");
+          }
+        });
+      });
 
       resetBtn.addEventListener("click", resetAll);
 
