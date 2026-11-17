@@ -1,0 +1,39 @@
+{
+  "name": "quicksplit",
+  "version": "2.0.0",
+  "description": "A modern, playful bill and tip calculator for splitting checks fairly among friends.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite template.html",
+    "build": "node scripts/build.js",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aryanshaurya1012-collab/Quicksplit.git"
+  },
+  "keywords": [
+    "bill-splitter",
+    "tip-calculator",
+    "react",
+    "tailwind",
+    "fintech"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "canvas-confetti": "^1.9.4",
+    "lucide-react": "^1.74.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "@vitejs/plugin-react": "^6.3.0",
+    "autoprefixer": "^10.6.2",
+    "postcss": "^8.5.33",
+    "tailwindcss": "^4.3.5",
+    "vite": "^8.3.8",
+    "vite-plugin-singlefile": "^2.3.4"
+  }
+}
