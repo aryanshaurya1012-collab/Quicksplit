@@ -1,21 +1,15 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { viteSingleFile } from "vite-plugin-singlefile";
 
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss(),
-    viteSingleFile()
+    tailwindcss()
   ],
-  build: {
-    target: "esnext",
-    assetsInlineLimit: 100000000,
-    chunkSizeWarningLimit: 100000000,
-    cssCodeSplit: false,
-    rollupOptions: {
-      input: "template.html"
-    }
+  server: {
+    port: 5173,
+    host: true,
+    open: false
   }
 });

@@ -4,8 +4,8 @@
   "description": "A modern, playful bill and tip calculator for splitting checks fairly among friends.",
   "type": "module",
   "scripts": {
-    "dev": "vite template.html",
-    "build": "node scripts/build.js",
+    "dev": "vite",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "repository": {
@@ -33,7 +33,6 @@
     "autoprefixer": "^10.6.2",
     "postcss": "^8.5.33",
     "tailwindcss": "^4.3.5",
-    "vite": "^8.3.8",
-    "vite-plugin-singlefile": "^2.3.4"
+    "vite": "^8.3.8"
   }
 }
