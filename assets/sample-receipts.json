@@ -1,0 +1,50 @@
+[
+  {
+    "id": "pizza_party",
+    "title": "🍕 Friday Pizza & Drinks",
+    "currency": "INR",
+    "discount": 10,
+    "discountType": "percent",
+    "taxPercent": 5,
+    "tipPercent": 10,
+    "items": [
+      { "id": "p_1", "name": "Woodfired Margherita", "price": "550", "sharedBy": ["p1", "p2", "p3", "p4"] },
+      { "id": "p_2", "name": "Truffle Mushroom Pizza", "price": "750", "sharedBy": ["p1", "p2", "p3"] },
+      { "id": "p_3", "name": "Garlic Bread with Cheese", "price": "280", "sharedBy": ["p1", "p2", "p3", "p4"] },
+      { "id": "p_4", "name": "Craft IPA Beers x 4", "price": "1400", "sharedBy": ["p1", "p2", "p4"] },
+      { "id": "p_5", "name": "Tiramisu Dessert", "price": "420", "sharedBy": ["p2", "p3"] }
+    ]
+  },
+  {
+    "id": "sushi_night",
+    "title": "🍣 Tokyo Sushi & Sake",
+    "currency": "USD",
+    "discount": 15,
+    "discountType": "amount",
+    "taxPercent": 8.5,
+    "tipPercent": 18,
+    "items": [
+      { "id": "s_1", "name": "Salmon Nigiri Platter", "price": "38", "sharedBy": ["p1", "p2", "p3", "p4"] },
+      { "id": "s_2", "name": "Dragon Roll", "price": "22", "sharedBy": ["p1", "p2"] },
+      { "id": "s_3", "name": "Spicy Tuna Crunch", "price": "20", "sharedBy": ["p3", "p4"] },
+      { "id": "s_4", "name": "Edamame & Gyoza", "price": "16", "sharedBy": ["p1", "p2", "p3", "p4"] },
+      { "id": "s_5", "name": "Junmai Sake Carafe", "price": "34", "sharedBy": ["p1", "p3", "p4"] }
+    ]
+  },
+  {
+    "id": "weekend_brunch",
+    "title": "🥞 Sunday Cafe Brunch",
+    "currency": "EUR",
+    "discount": 0,
+    "discountType": "percent",
+    "taxPercent": 10,
+    "tipPercent": 12,
+    "items": [
+      { "id": "b_1", "name": "Avocado Sourdough Toast", "price": "14", "sharedBy": ["p1"] },
+      { "id": "b_2", "name": "Brioche French Toast", "price": "16", "sharedBy": ["p2"] },
+      { "id": "b_3", "name": "Eggs Benedict", "price": "18", "sharedBy": ["p3"] },
+      { "id": "b_4", "name": "Smoothie Bowls x 2", "price": "18", "sharedBy": ["p2", "p4"] },
+      { "id": "b_5", "name": "Flat Whites & Mimosas", "price": "26", "sharedBy": ["p1", "p2", "p3", "p4"] }
+    ]
+  }
+]

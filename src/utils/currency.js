@@ -1,4 +1,4 @@
-import { CURRENCIES, DEFAULT_CURRENCY } from "../constants";
+import { CURRENCIES, DEFAULT_CURRENCY } from "../constants/index.js";
 
 /**
  * Format a numeric value into a localized currency string.

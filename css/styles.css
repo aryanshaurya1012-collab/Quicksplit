@@ -1951,3 +1951,87 @@ fieldset.field {
     transition: none !important;
   }
 }
+
+
+/* ==========================================================================
+   QuickSplit Advanced Capabilities: Discounts, Taxes, Settlements & Modals
+   ========================================================================== */
+
+.discount-tax-accordion {
+  margin-top: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+
+.discount-tax-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.15rem;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text);
+  background: transparent;
+  transition: background var(--transition);
+}
+
+.discount-tax-header:hover {
+  background: var(--violet-soft);
+}
+
+.discount-tax-body {
+  padding: 1rem 1.15rem;
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .discount-tax-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.settlement-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--violet-soft);
+  color: var(--violet);
+  border: 1px solid rgba(109, 74, 255, 0.2);
+}
+
+.smart-paste-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.smart-paste-textarea {
+  width: 100%;
+  min-height: 140px;
+  padding: 0.85rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--text);
+  resize: vertical;
+}
+
+.smart-paste-textarea:focus {
+  outline: none;
+  border-color: var(--border-strong);
+  box-shadow: var(--focus-ring);
+}

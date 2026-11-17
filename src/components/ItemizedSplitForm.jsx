@@ -11,7 +11,9 @@ export default function ItemizedSplitForm({
   subtotal,
   showToast,
   playTick,
-  playBlipDown
+  playBlipDown,
+  onOpenSmartPaste,
+  onOpenSampleReceipts
 }) {
   const [itemName, setItemName] = useState("");
   const [itemPrice, setItemPrice] = useState("");
@@ -77,9 +79,31 @@ export default function ItemizedSplitForm({
           <Receipt className="w-3.5 h-3.5 text-teal-500" />
           Itemized Order List
         </label>
-        <span className="text-xs font-bold text-teal-600 dark:text-teal-400">
-          Subtotal: {formatCurrency(subtotal, currency)}
-        </span>
+        <div className="flex items-center gap-2">
+          {onOpenSmartPaste && (
+            <button
+              type="button"
+              onClick={onOpenSmartPaste}
+              className="text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer"
+              title="Auto-detect dishes and prices from pasted text"
+            >
+              📋 Smart Paste
+            </button>
+          )}
+          {onOpenSampleReceipts && (
+            <button
+              type="button"
+              onClick={onOpenSampleReceipts}
+              className="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
+              title="Load example restaurant checks"
+            >
+              🍕 Sample Checks
+            </button>
+          )}
+          <span className="text-xs font-bold text-teal-600 dark:text-teal-400 pl-1 border-l border-slate-200 dark:border-white/10">
+            Subtotal: {formatCurrency(subtotal, currency)}
+          </span>
+        </div>
       </div>
 
       {/* Add Item Form */}

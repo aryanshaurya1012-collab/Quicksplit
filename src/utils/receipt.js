@@ -1,5 +1,5 @@
-import { CURRENCIES, DEFAULT_CURRENCY } from "../constants";
-import { formatCurrency, formatTip } from "./currency";
+import { CURRENCIES, DEFAULT_CURRENCY } from "../constants/index.js";
+import { formatCurrency, formatTip } from "./currency.js";
 
 /**
  * Builds a formatted receipt text for sharing to WhatsApp, Messages, Slack, or Clipboard.
@@ -9,7 +9,8 @@ export function buildReceiptSummary(
   currencyCode = DEFAULT_CURRENCY,
   friendList = [],
   items = [],
-  isItemized = false
+  isItemized = false,
+  settlements = []
 ) {
   const config = CURRENCIES[currencyCode] || CURRENCIES[DEFAULT_CURRENCY];
   const dateStr = new Date().toLocaleDateString(config.locale, {
@@ -36,10 +37,18 @@ export function buildReceiptSummary(
     lines.push(`──────────────────────────`);
   }
 
-  lines.push(
-    `Subtotal:        ${formatCurrency(split.bill, currencyCode)}`,
-    `Tip (${formatTip(split.tipPercent)}):      ${formatCurrency(split.tipAmount, currencyCode)}`
-  );
+  lines.push(`Subtotal:        ${formatCurrency(split.bill, currencyCode)}`);
+
+  if (split.discountAmount > 0) {
+    const discLabel = split.discountType === "percent" ? `-${split.discountVal}%` : `Flat`;
+    lines.push(`Discount (${discLabel}):   -${formatCurrency(split.discountAmount, currencyCode)}`);
+  }
+
+  if (split.taxAmount > 0) {
+    lines.push(`Tax (${split.taxPercent}%):        +${formatCurrency(split.taxAmount, currencyCode)}`);
+  }
+
+  lines.push(`Tip (${formatTip(split.tipPercent)}):      +${formatCurrency(split.tipAmount, currencyCode)}`);
 
   if (split.isRounded && split.roundingDifference > 0) {
     lines.push(`Rounding Bonus:  +${formatCurrency(split.roundingDifference, currencyCode)}`);
@@ -53,7 +62,7 @@ export function buildReceiptSummary(
       `👉 *Each Person Pays: ${formatCurrency(split.perPerson, currencyCode)}*`
     );
   } else {
-    lines.push(`👥 *Individual Breakdown (with Tip):*`);
+    lines.push(`👥 *Individual Breakdown (with Tax & Tip):*`);
   }
 
   if (split.isRounded) {
@@ -67,6 +76,14 @@ export function buildReceiptSummary(
     friendList.forEach((f) => {
       const amount = typeof f.totalShare === "number" ? f.totalShare : split.perPerson;
       lines.push(`• ${f.name}: ${formatCurrency(amount, currencyCode)} ${f.paid ? "✅ (Paid)" : "⏳ (Pending)"}`);
+    });
+  }
+
+  // Who owes whom settlement instructions
+  if (settlements && settlements.length > 0) {
+    lines.push(`──────────────────────────`, `🤝 *Settlement Plan (Who owes whom):*`);
+    settlements.forEach((s) => {
+      lines.push(`• ${s.from} pays ${s.to}: ${s.formatted}`);
     });
   }
 

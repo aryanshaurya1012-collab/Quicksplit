@@ -13,7 +13,9 @@ import {
   formatCurrency,
   calculateSplit,
   calculateItemizedSplit,
-  buildReceiptSummary
+  buildReceiptSummary,
+  calculateSettlements,
+  exportToCSV
 } from "./utils";
 
 // Custom Hooks
@@ -26,6 +28,7 @@ import Hero from "./components/Hero";
 import HowItWorks from "./components/HowItWorks";
 import EqualSplitForm from "./components/EqualSplitForm";
 import ItemizedSplitForm from "./components/ItemizedSplitForm";
+import TaxAndDiscount from "./components/TaxAndDiscount";
 import TipSelector from "./components/TipSelector";
 import GroupManager from "./components/GroupManager";
 import ReceiptCard from "./components/ReceiptCard";
@@ -33,6 +36,9 @@ import RecentSplits from "./components/RecentSplits";
 import FaqSection from "./components/FaqSection";
 import AboutSection from "./components/AboutSection";
 import UpiModal from "./components/UpiModal";
+import SettlementModal from "./components/SettlementModal";
+import SmartPasteModal from "./components/SmartPasteModal";
+import SampleReceiptsModal from "./components/SampleReceiptsModal";
 import Footer from "./components/Footer";
 import BackToTop from "./components/BackToTop";
 
@@ -66,6 +72,11 @@ export default function App() {
   const [customTipInput, setCustomTipInput] = useState("");
   const [roundUp, setRoundUp] = useState(false);
 
+  // Discounts & Taxes State
+  const [discountVal, setDiscountVal] = useState(0);
+  const [discountType, setDiscountType] = useState("percent"); // "percent" or "amount"
+  const [taxPercent, setTaxPercent] = useState(0);
+
   // Group State
   const [friends, setFriends] = useState(DEFAULT_FRIENDS);
 
@@ -79,6 +90,10 @@ export default function App() {
   // Modal, Toast & History State
   const [toastMessage, setToastMessage] = useState("");
   const [showQRModal, setShowQRModal] = useState(false);
+  const [showSettlementModal, setShowSettlementModal] = useState(false);
+  const [showSmartPasteModal, setShowSmartPasteModal] = useState(false);
+  const [showSampleModal, setShowSampleModal] = useState(false);
+
   const [history, setHistory] = useState(() => {
     try {
       const raw = localStorage.getItem("quicksplit-history");
@@ -136,20 +151,42 @@ export default function App() {
     return tipPercent;
   }, [isCustomTip, customTipInput, tipPercent]);
 
-  // Mathematical Split Calculations
+  // Mathematical Split Calculations with Discounts & Taxes
   const equalSplit = useMemo(() => {
-    return calculateSplit(numericBill, activeTipRate, friends.length, roundUp);
-  }, [numericBill, activeTipRate, friends.length, roundUp]);
+    return calculateSplit(
+      numericBill,
+      activeTipRate,
+      friends.length,
+      roundUp,
+      taxPercent,
+      discountVal,
+      discountType
+    );
+  }, [numericBill, activeTipRate, friends.length, roundUp, taxPercent, discountVal, discountType]);
 
   const itemizedSplit = useMemo(() => {
-    return calculateItemizedSplit(items, activeTipRate, friends, roundUp);
-  }, [items, activeTipRate, friends, roundUp]);
+    return calculateItemizedSplit(
+      items,
+      activeTipRate,
+      friends,
+      roundUp,
+      taxPercent,
+      discountVal,
+      discountType
+    );
+  }, [items, activeTipRate, friends, roundUp, taxPercent, discountVal, discountType]);
 
   // Unified active split depending on active mode
   const activeSplit = useMemo(() => {
     if (splitMode === "itemized") {
       return {
         bill: itemizedSplit.subtotal,
+        discountVal: itemizedSplit.discountVal,
+        discountType: itemizedSplit.discountType,
+        discountAmount: itemizedSplit.discountAmount,
+        discountedSubtotal: itemizedSplit.discountedSubtotal,
+        taxPercent: itemizedSplit.taxPercent,
+        taxAmount: itemizedSplit.taxAmount,
         tipPercent: itemizedSplit.tipPercent,
         tipAmount: itemizedSplit.tipAmount,
         total: itemizedSplit.total,
@@ -162,6 +199,21 @@ export default function App() {
     return equalSplit;
   }, [splitMode, equalSplit, itemizedSplit, friends.length]);
 
+  // Compute who owes whom debt transfers
+  const settlements = useMemo(() => {
+    const friendShares = splitMode === "itemized"
+      ? itemizedSplit.breakdown
+      : friends.map((f) => ({ ...f, totalShare: activeSplit.perPerson }));
+
+    // Assume first person paid by default for text generation unless custom
+    const party = friendShares.map((f, idx) => ({
+      ...f,
+      paidAmount: idx === 0 ? activeSplit.total : 0
+    }));
+
+    return calculateSettlements(party, currency);
+  }, [splitMode, itemizedSplit, friends, activeSplit, currency]);
+
   // Save calculation to local history
   const handleSaveHistory = useCallback((silent = false) => {
     if (activeSplit.bill <= 0) {
@@ -173,6 +225,11 @@ export default function App() {
       id: String(Date.now()),
       mode: splitMode,
       bill: activeSplit.bill,
+      discountVal,
+      discountType,
+      discountAmount: activeSplit.discountAmount,
+      taxPercent,
+      taxAmount: activeSplit.taxAmount,
       tipPercent: activeSplit.tipPercent,
       tipAmount: activeSplit.tipAmount,
       total: activeSplit.total,
@@ -194,7 +251,7 @@ export default function App() {
       playSuccessChime();
       showToast("Split saved to Recent Splits! 💾");
     }
-  }, [activeSplit, splitMode, friends, currency, items, showToast, playSuccessChime]);
+  }, [activeSplit, splitMode, friends, currency, items, discountVal, discountType, taxPercent, showToast, playSuccessChime]);
 
   // Copy receipt summary to clipboard
   const handleCopySummary = useCallback(async () => {
@@ -205,7 +262,7 @@ export default function App() {
 
     const isItemized = splitMode === "itemized";
     const friendData = isItemized ? itemizedSplit.breakdown : friends;
-    const text = buildReceiptSummary(activeSplit, currency, friendData, items, isItemized);
+    const text = buildReceiptSummary(activeSplit, currency, friendData, items, isItemized, settlements);
 
     try {
       await navigator.clipboard.writeText(text);
@@ -220,7 +277,7 @@ export default function App() {
     } catch {
       showToast("Could not access clipboard");
     }
-  }, [activeSplit, splitMode, itemizedSplit, friends, currency, items, handleSaveHistory, playSuccessChime, showToast]);
+  }, [activeSplit, splitMode, itemizedSplit, friends, currency, items, settlements, handleSaveHistory, playSuccessChime, showToast]);
 
   // Share summary via Web Share API
   const handleShare = useCallback(async () => {
@@ -231,7 +288,7 @@ export default function App() {
 
     const isItemized = splitMode === "itemized";
     const friendData = isItemized ? itemizedSplit.breakdown : friends;
-    const text = buildReceiptSummary(activeSplit, currency, friendData, items, isItemized);
+    const text = buildReceiptSummary(activeSplit, currency, friendData, items, isItemized, settlements);
 
     if (navigator.share) {
       try {
@@ -249,7 +306,7 @@ export default function App() {
     } else {
       handleCopySummary();
     }
-  }, [activeSplit, splitMode, itemizedSplit, friends, currency, items, handleSaveHistory, handleCopySummary, showToast]);
+  }, [activeSplit, splitMode, itemizedSplit, friends, currency, items, settlements, handleSaveHistory, handleCopySummary, showToast]);
 
   // Print formatted receipt
   const handlePrint = useCallback(() => {
@@ -258,9 +315,19 @@ export default function App() {
     window.print();
   }, [playTick, handleSaveHistory]);
 
+  // Export to CSV spreadsheet
+  const handleExportCSV = useCallback(() => {
+    playTick();
+    const friendData = splitMode === "itemized" ? itemizedSplit.breakdown : friends;
+    exportToCSV(activeSplit, currency, friendData, splitMode === "itemized" ? items : []);
+    showToast("CSV summary spreadsheet exported! 📊");
+  }, [splitMode, activeSplit, currency, itemizedSplit, friends, items, playTick, showToast]);
+
   // Reset form
   const handleReset = useCallback(() => {
     playBlipDown();
+    setDiscountVal(0);
+    setTaxPercent(0);
     if (splitMode === "equal") {
       setBillInput("");
       setTipPercent(15);
@@ -286,6 +353,10 @@ export default function App() {
     setCurrency(item.currency || DEFAULT_CURRENCY);
     setSplitMode(item.mode || "equal");
 
+    if (item.discountVal !== undefined) setDiscountVal(item.discountVal);
+    if (item.discountType !== undefined) setDiscountType(item.discountType);
+    if (item.taxPercent !== undefined) setTaxPercent(item.taxPercent);
+
     if (item.mode === "itemized" && Array.isArray(item.items) && item.items.length > 0) {
       setItems(item.items);
     } else {
@@ -307,6 +378,28 @@ export default function App() {
     const calcElement = document.getElementById("calculator");
     if (calcElement) calcElement.scrollIntoView({ behavior: "smooth" });
   }, [playTick, showToast]);
+
+  // Load a preset sample receipt
+  const handleLoadSample = useCallback((sample) => {
+    playSuccessChime();
+    setCurrency(sample.currency);
+    setSplitMode("itemized");
+    setItems(sample.items);
+    setDiscountVal(sample.discount || 0);
+    setDiscountType(sample.discountType || "percent");
+    setTaxPercent(sample.taxPercent || 0);
+    setTipPercent(sample.tipPercent || 15);
+    setIsCustomTip(false);
+    showToast(`Loaded ${sample.title}! ✨`);
+    const calcElement = document.getElementById("calculator");
+    if (calcElement) calcElement.scrollIntoView({ behavior: "smooth" });
+  }, [playSuccessChime, showToast]);
+
+  // Import parsed items from Smart Paste
+  const handleImportParsedItems = useCallback((newParsedItems) => {
+    setSplitMode("itemized");
+    setItems((prev) => [...prev, ...newParsedItems]);
+  }, []);
 
   // Delete history split
   const handleDeleteHistory = useCallback((id, e) => {
@@ -334,7 +427,6 @@ export default function App() {
   // Keyboard Shortcuts (C, S, T, M, R)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't trigger shortcuts if user is typing in an input or textarea
       if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName)) {
         return;
       }
@@ -405,7 +497,7 @@ export default function App() {
         {/* Live Interactive Calculator Section */}
         <section id="calculator" className="py-12 border-t border-slate-200/80 dark:border-white/5 scroll-mt-20">
           
-          {/* Section Header with Mode Switcher */}
+          {/* Section Header with Mode Switcher & Quick Load Samples */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
               <span className="text-xs font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 block mb-1">
@@ -416,36 +508,47 @@ export default function App() {
               </h2>
             </div>
 
-            {/* Mode Switcher Buttons */}
-            <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 self-start sm:self-auto shadow-inner">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Load Example Check Button */}
               <button
-                onClick={() => {
-                  playTick();
-                  setSplitMode("equal");
-                }}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  splitMode === "equal"
-                    ? "bg-white dark:bg-[#181428] text-indigo-600 dark:text-indigo-400 shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                }`}
+                type="button"
+                onClick={() => setShowSampleModal(true)}
+                className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 border border-amber-200/80 dark:border-amber-800/60 text-xs font-bold text-amber-700 dark:text-amber-300 transition-all cursor-pointer shadow-xs active:scale-95"
               >
-                <Users className="w-3.5 h-3.5" />
-                ⚡ Equal Split
+                🍕 Sample Checks
               </button>
-              <button
-                onClick={() => {
-                  playTick();
-                  setSplitMode("itemized");
-                }}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  splitMode === "itemized"
-                    ? "bg-white dark:bg-[#181428] text-teal-600 dark:text-teal-400 shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                }`}
-              >
-                <Receipt className="w-3.5 h-3.5" />
-                🧾 Itemized Split
-              </button>
+
+              {/* Mode Switcher Buttons */}
+              <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 shadow-inner">
+                <button
+                  onClick={() => {
+                    playTick();
+                    setSplitMode("equal");
+                  }}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    splitMode === "equal"
+                      ? "bg-white dark:bg-[#181428] text-indigo-600 dark:text-indigo-400 shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                  }`}
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  ⚡ Equal
+                </button>
+                <button
+                  onClick={() => {
+                    playTick();
+                    setSplitMode("itemized");
+                  }}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    splitMode === "itemized"
+                      ? "bg-white dark:bg-[#181428] text-teal-600 dark:text-teal-400 shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                  }`}
+                >
+                  <Receipt className="w-3.5 h-3.5" />
+                  🧾 Itemized
+                </button>
+              </div>
             </div>
           </div>
 
@@ -473,8 +576,24 @@ export default function App() {
                   showToast={showToast}
                   playTick={playTick}
                   playBlipDown={playBlipDown}
+                  onOpenSmartPaste={() => setShowSmartPasteModal(true)}
+                  onOpenSampleReceipts={() => setShowSampleModal(true)}
                 />
               )}
+
+              {/* Discounts & Sales Tax / GST Panel */}
+              <TaxAndDiscount
+                discountVal={discountVal}
+                setDiscountVal={setDiscountVal}
+                discountType={discountType}
+                setDiscountType={setDiscountType}
+                taxPercent={taxPercent}
+                setTaxPercent={setTaxPercent}
+                currency={currency}
+                discountAmount={activeSplit.discountAmount}
+                taxAmount={activeSplit.taxAmount}
+                playTick={playTick}
+              />
 
               {/* Tip Rate Selector */}
               <TipSelector
@@ -519,6 +638,10 @@ export default function App() {
                 onPrint={handlePrint}
                 onReset={handleReset}
                 onOpenQR={() => setShowQRModal(true)}
+                onOpenSettlement={() => setShowSettlementModal(true)}
+                onExportCSV={handleExportCSV}
+                showToast={showToast}
+                playTick={playTick}
               />
             </div>
 
@@ -547,6 +670,37 @@ export default function App() {
         onClose={() => setShowQRModal(false)}
         amount={splitMode === "itemized" && friends.length > 0 ? (activeSplit.total / friends.length) : activeSplit.perPerson}
         showToast={showToast}
+        playTick={playTick}
+      />
+
+      {/* Multi-Payer Debt Settlement Modal (Who Owes Whom) */}
+      <SettlementModal
+        isOpen={showSettlementModal}
+        onClose={() => setShowSettlementModal(false)}
+        friends={splitMode === "itemized" ? itemizedSplit.breakdown : friends.map((f) => ({ ...f, totalShare: activeSplit.perPerson }))}
+        setFriends={setFriends}
+        totalCheck={activeSplit.total}
+        currency={currency}
+        showToast={showToast}
+        playTick={playTick}
+      />
+
+      {/* Smart Receipt Text Parser Modal */}
+      <SmartPasteModal
+        isOpen={showSmartPasteModal}
+        onClose={() => setShowSmartPasteModal(false)}
+        friends={friends}
+        currency={currency}
+        onImportItems={handleImportParsedItems}
+        showToast={showToast}
+        playTick={playTick}
+      />
+
+      {/* Preset Sample Receipts Modal */}
+      <SampleReceiptsModal
+        isOpen={showSampleModal}
+        onClose={() => setShowSampleModal(false)}
+        onLoadSample={handleLoadSample}
         playTick={playTick}
       />
 
