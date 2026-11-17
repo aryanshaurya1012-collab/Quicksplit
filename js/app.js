@@ -1,5 +1,5 @@
 /**
- * QuickSplit 2.0 UI Wiring
+ * QuickSplit UI Wiring
  * Handles calculator logic, themes, history, copy/share, round-up, and accessibility.
  */
 (function () {

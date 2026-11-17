@@ -1,6 +1,6 @@
 {
   "name": "quicksplit",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "A modern, playful bill and tip calculator for splitting checks fairly among friends.",
   "type": "module",
   "scripts": {

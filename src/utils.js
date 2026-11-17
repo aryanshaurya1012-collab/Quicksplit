@@ -30,7 +30,7 @@ export function formatTip(percent) {
 }
 
 /**
- * Core mathematical engine for bill splitting with optional round-up logic.
+ * Core mathematical engine for equal bill splitting with optional round-up logic.
  */
 export function calculateSplit(bill, tipPercent, peopleCount, roundUp = false) {
   const validBill = Number.isFinite(bill) && bill >= 0 ? bill : 0;
@@ -72,11 +72,70 @@ export function calculateSplit(bill, tipPercent, peopleCount, roundUp = false) {
 }
 
 /**
- * Synthesize a modern, subtle haptic-style audio click via Web Audio API.
- * Silent if audio is unavailable or blocked.
+ * Itemized split calculation helper.
+ * Calculates individual totals for each friend based on the items they shared.
+ */
+export function calculateItemizedSplit(items, tipPercent, friends, roundUp = false) {
+  const validTip = Number.isFinite(tipPercent) && tipPercent >= 0 ? tipPercent : 0;
+  const friendTotals = {};
+
+  friends.forEach(f => {
+    friendTotals[f.id] = 0;
+  });
+
+  let subtotal = 0;
+
+  items.forEach(item => {
+    const price = Number(item.price) || 0;
+    subtotal += price;
+    const consumers = item.sharedBy && item.sharedBy.length > 0 ? item.sharedBy : friends.map(f => f.id);
+    const perItemShare = price / consumers.length;
+
+    consumers.forEach(fId => {
+      if (friendTotals[fId] !== undefined) {
+        friendTotals[fId] += perItemShare;
+      }
+    });
+  });
+
+  const tipMultiplier = 1 + (validTip / 100);
+  let totalWithTip = subtotal * tipMultiplier;
+
+  // Add tip to each friend proportionally
+  const breakdown = friends.map(f => {
+    const rawShare = (friendTotals[f.id] || 0) * tipMultiplier;
+    let finalShare = rawShare;
+    if (roundUp && rawShare > 0) {
+      finalShare = Math.ceil(rawShare);
+    }
+    return {
+      id: f.id,
+      name: f.name,
+      color: f.color,
+      paid: f.paid,
+      baseAmount: friendTotals[f.id] || 0,
+      totalShare: finalShare,
+      isRounded: roundUp && finalShare > rawShare
+    };
+  });
+
+  const totalCalculated = breakdown.reduce((acc, f) => acc + f.totalShare, 0);
+
+  return {
+    subtotal,
+    tipPercent: validTip,
+    tipAmount: totalWithTip - subtotal,
+    total: totalCalculated,
+    breakdown
+  };
+}
+
+/**
+ * Web Audio API tactile click sound.
  */
 let audioCtx = null;
-export function playSoftClick(freq = 600, duration = 0.04) {
+export function playSoftClick(freq = 600, duration = 0.04, enabled = true) {
+  if (!enabled) return;
   try {
     if (typeof window === "undefined") return;
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -102,12 +161,12 @@ export function playSoftClick(freq = 600, duration = 0.04) {
     osc.start();
     osc.stop(audioCtx.currentTime + duration);
   } catch (e) {
-    // Gracefully ignore audio errors
+    // Ignore audio errors
   }
 }
 
 /**
- * Build a WhatsApp/SMS/Slack ready text summary.
+ * Build WhatsApp / SMS / Slack text summary.
  */
 export function buildReceiptSummary(split, currencyCode = DEFAULT_CURRENCY, friendList = []) {
   const config = CURRENCIES[currencyCode] || CURRENCIES[DEFAULT_CURRENCY];

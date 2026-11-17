@@ -1,12 +1,17 @@
 @import "tailwindcss";
 
-@variant dark (&:where(.dark, .dark *));
+@variant dark (&:is(.dark, .dark *));
 
 @layer base {
   :root {
     --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     --font-body: 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
@@ -64,4 +69,20 @@
 
 .animate-pop {
   animation: tickPop 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Print styles for receipt printing / PDF save */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  header, footer, .no-print {
+    display: none !important;
+  }
+  .receipt-card {
+    box-shadow: none !important;
+    border: 1px solid #cccccc !important;
+    max-width: 100% !important;
+  }
 }
