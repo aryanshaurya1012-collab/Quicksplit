@@ -89,7 +89,7 @@ export function calculateItemizedSplit(items, tipPercent, friends, roundUp = fal
     const price = Number(item.price) || 0;
     subtotal += price;
     const consumers = item.sharedBy && item.sharedBy.length > 0 ? item.sharedBy : friends.map(f => f.id);
-    const perItemShare = consumers.length > 0 ? price / consumers.length : 0;
+    const perItemShare = price / consumers.length;
 
     consumers.forEach(fId => {
       if (friendTotals[fId] !== undefined) {
@@ -99,18 +99,14 @@ export function calculateItemizedSplit(items, tipPercent, friends, roundUp = fal
   });
 
   const tipMultiplier = 1 + (validTip / 100);
-  const rawTotal = subtotal * tipMultiplier;
+  let totalWithTip = subtotal * tipMultiplier;
 
   // Add tip to each friend proportionally
-  let totalRoundingBonus = 0;
   const breakdown = friends.map(f => {
     const rawShare = (friendTotals[f.id] || 0) * tipMultiplier;
     let finalShare = rawShare;
-    let roundedExtra = 0;
     if (roundUp && rawShare > 0) {
       finalShare = Math.ceil(rawShare);
-      roundedExtra = finalShare - rawShare;
-      totalRoundingBonus += roundedExtra;
     }
     return {
       id: f.id,
@@ -119,8 +115,7 @@ export function calculateItemizedSplit(items, tipPercent, friends, roundUp = fal
       paid: f.paid,
       baseAmount: friendTotals[f.id] || 0,
       totalShare: finalShare,
-      rawShare,
-      isRounded: roundUp && roundedExtra > 0
+      isRounded: roundUp && finalShare > rawShare
     };
   });
 
@@ -129,12 +124,8 @@ export function calculateItemizedSplit(items, tipPercent, friends, roundUp = fal
   return {
     subtotal,
     tipPercent: validTip,
-    tipAmount: (subtotal * (validTip / 100)) + totalRoundingBonus,
-    rawTipAmount: subtotal * (validTip / 100),
+    tipAmount: totalWithTip - subtotal,
     total: totalCalculated,
-    rawTotal,
-    roundingDifference: totalRoundingBonus,
-    isRounded: roundUp && totalRoundingBonus > 0,
     breakdown
   };
 }
@@ -177,7 +168,7 @@ export function playSoftClick(freq = 600, duration = 0.04, enabled = true) {
 /**
  * Build WhatsApp / SMS / Slack text summary.
  */
-export function buildReceiptSummary(split, currencyCode = DEFAULT_CURRENCY, friendList = [], items = [], isItemized = false) {
+export function buildReceiptSummary(split, currencyCode = DEFAULT_CURRENCY, friendList = []) {
   const config = CURRENCIES[currencyCode] || CURRENCIES[DEFAULT_CURRENCY];
   const dateStr = new Date().toLocaleDateString(config.locale, {
     month: "short",
@@ -185,32 +176,13 @@ export function buildReceiptSummary(split, currencyCode = DEFAULT_CURRENCY, frie
     year: "numeric"
   });
 
-  const title = isItemized ? `🧾 *QuickSplit — Itemized Receipt*` : `🧾 *QuickSplit — Bill Summary*`;
-
   const lines = [
-    title,
+    `🧾 *QuickSplit — Bill Summary*`,
     `📅 ${dateStr}`,
-    `──────────────────────────`
-  ];
-
-  if (isItemized && items.length > 0) {
-    lines.push(`📋 *Ordered Items:*`);
-    const friendMap = {};
-    friendList.forEach(f => {
-      friendMap[f.id] = f.name;
-    });
-
-    items.forEach(item => {
-      const consumers = (item.sharedBy || []).map(id => friendMap[id] || "Someone").join(", ");
-      lines.push(`• ${item.name}: ${formatCurrency(Number(item.price), currencyCode)} (${consumers || "All"})`);
-    });
-    lines.push(`──────────────────────────`);
-  }
-
-  lines.push(
+    `──────────────────────────`,
     `Subtotal:        ${formatCurrency(split.bill, currencyCode)}`,
     `Tip (${formatTip(split.tipPercent)}):      ${formatCurrency(split.tipAmount, currencyCode)}`
-  );
+  ];
 
   if (split.isRounded && split.roundingDifference > 0) {
     lines.push(`Rounding Bonus:  +${formatCurrency(split.roundingDifference, currencyCode)}`);
@@ -218,29 +190,19 @@ export function buildReceiptSummary(split, currencyCode = DEFAULT_CURRENCY, frie
 
   lines.push(
     `Total Check:     ${formatCurrency(split.total, currencyCode)}`,
-    `──────────────────────────`
+    `Split Between:   ${split.people} ${split.people === 1 ? "person" : "people"}`,
+    `──────────────────────────`,
+    `👉 *Each Person Pays: ${formatCurrency(split.perPerson, currencyCode)}*`
   );
-
-  if (!isItemized) {
-    lines.push(
-      `Split Between:   ${split.people} ${split.people === 1 ? "person" : "people"}`,
-      `👉 *Each Person Pays: ${formatCurrency(split.perPerson, currencyCode)}*`
-    );
-  } else {
-    lines.push(`👥 *Individual Breakdown (with Tip):*`);
-  }
 
   if (split.isRounded) {
     lines.push(`_(Rounded up to next whole currency unit)_`);
   }
 
   if (friendList && friendList.length > 0) {
-    if (!isItemized) {
-      lines.push(`──────────────────────────`, `👥 *Who has paid:*`);
-    }
+    lines.push(`──────────────────────────`, `👥 *Breakdown:*`);
     friendList.forEach(f => {
-      const amount = typeof f.totalShare === "number" ? f.totalShare : split.perPerson;
-      lines.push(`• ${f.name}: ${formatCurrency(amount, currencyCode)} ${f.paid ? "✅ (Paid)" : "⏳ (Pending)"}`);
+      lines.push(`• ${f.name}: ${formatCurrency(split.perPerson, currencyCode)} ${f.paid ? "✅ (Paid)" : "⏳ (Pending)"}`);
     });
   }
 
