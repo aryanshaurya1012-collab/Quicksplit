@@ -27,6 +27,8 @@ A modern, playful, and ultra-responsive bill and tip calculator for splitting ch
 - 💾 **Persistent History**: View past calculations in `localStorage` with a dedicated **Save** button, auto-save on copy/share/print, **1-Click Restore** (restores complete bill, tip, friends, and itemized dishes), and individual delete or clear all.
 - 🌓 **Bulletproof Dark & Light Mode**: High-contrast, accessible theme palette with persistent preference stored in `localStorage` and instant CSS class switching.
 - 📱 **Universal Device Usability**: Flawlessly optimized across desktop PCs, laptops, tablets, and smartphones with a responsive slide-down mobile drawer menu.
+- ⌨️ **Power-User Keyboard Shortcuts**: Instant hotkeys (`[C]` Copy, `[S]` Save, `[T]` Theme, `[M]` Mode, `[R]` Reset) for rapid desktop workflow.
+- 📊 **Segmented Split Visualizer Bar**: Revolut/Fintech-grade visual proportion bar highlighting each friend's share and percentage of the total check.
 - 🌟 **Landing Experience**: Engaging Hero section with a live floating receipt preview, "How It Works" 3-step guide, FAQ accordions, About QuickSplit stats, and a floating Back to Top button.
 
 ---
@@ -35,18 +37,40 @@ A modern, playful, and ultra-responsive bill and tip calculator for splitting ch
 
 ```
 Quicksplit/
-├── index.html          # Root HTML entry point (Plus Jakarta Sans & Inter fonts)
-├── package.json        # Dependencies & scripts (React 19, Vite, Tailwind v4, QRCode, Canvas Confetti)
-├── vite.config.js      # Vite and Tailwind CSS configuration
+├── index.html              # Root HTML entry point (Plus Jakarta Sans & Inter fonts)
+├── package.json            # Dependencies & scripts (React 19, Vite, Tailwind v4, QRCode, Confetti)
+├── vite.config.js          # Vite and Tailwind CSS configuration
 ├── src/
-│   ├── App.jsx         # Complete application (Landing, Equal & Itemized modes, Receipt)
-│   ├── main.jsx        # React root mounting point
-│   ├── index.css       # Tailwind CSS imports, typography, and print rules
-│   ├── constants.js    # Currency configurations, tip presets, and color palettes
-│   └── utils.js        # Formatting, math engine, receipt builder, and audio haptics
+│   ├── components/         # Modular UI components
+│   │   ├── Navbar.jsx          # Header with branding, mode switch, audio, currency, theme
+│   │   ├── Hero.jsx            # Interactive hero showcase with live preview playground
+│   │   ├── HowItWorks.jsx      # 3-step workflow overview cards
+│   │   ├── EqualSplitForm.jsx  # Bill subtotal input & quick-add chips
+│   │   ├── ItemizedSplitForm.jsx # Dishes/drinks order entry & per-item friend tags
+│   │   ├── TipSelector.jsx     # Tip presets with musical pentatonic chimes & custom tip
+│   │   ├── GroupManager.jsx    # Add person, remove (×), inline rename, paid toggles
+│   │   ├── ReceiptCard.jsx     # Digital check card, line items, actions & privacy pill
+│   │   ├── SplitVisualizer.jsx # Segmented fintech proportion bar & percentage chips
+│   │   ├── RecentSplits.jsx    # Saved splits grid with 1-click restore & delete
+│   │   ├── FaqSection.jsx      # Interactive FAQ accordions
+│   │   ├── AboutSection.jsx    # Project stats (0 trackers, 9 currencies, 100% client-side)
+│   │   ├── UpiModal.jsx        # 100% offline QR generator with UPI deep links
+│   │   ├── Footer.jsx          # Keyboard shortcuts pill & copyright footer
+│   │   └── BackToTop.jsx       # Floating scroll-to-top button
+│   ├── hooks/              # Custom React hooks
+│   │   ├── useAudioHaptics.js  # Musical synthesizer chimes & click haptics
+│   │   └── useTheme.js         # High-contrast dark/light synchronization
+│   ├── utils/              # Pure utility functions
+│   │   ├── currency.js         # NumberFormat currency & tip percentage formatters
+│   │   ├── math.js             # Equal and itemized mathematical split engine
+│   │   └── receipt.js          # Formatted receipt string generator
+│   ├── constants/          # Static currency configurations & color palettes
+│   ├── App.jsx             # Clean declarative conductor component
+│   ├── index.css           # Tailwind CSS styles, animations, and print stylesheet
+│   └── main.jsx            # React root mounting point
 ├── assets/
-│   └── favicon.svg     # Vector brand mark
-└── README.md           # Documentation
+│   └── favicon.svg         # Vector brand mark
+└── README.md               # Documentation
 ```
 
 ---
