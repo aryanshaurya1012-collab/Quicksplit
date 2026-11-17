@@ -91,13 +91,15 @@ export default function App() {
 
   const billInputRef = useRef(null);
 
-  // Apply theme class to <html>
+  // Apply theme class to <html> and <body>
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") {
       root.classList.add("dark");
+      document.body.classList.add("dark");
     } else {
       root.classList.remove("dark");
+      document.body.classList.remove("dark");
     }
     try {
       localStorage.setItem("quicksplit-theme", theme);
@@ -315,7 +317,7 @@ export default function App() {
   const quickAmounts = QUICK_ADD_AMOUNTS[currency] || QUICK_ADD_AMOUNTS.USD;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0b0914] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
+    <div className={`min-h-screen ${theme === "dark" ? "dark" : ""} bg-slate-50 dark:bg-[#0b0914] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200`}>
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full shadow-2xl bg-slate-900/90 text-white dark:bg-white/95 dark:text-slate-900 text-sm font-medium backdrop-blur-md transition-all animate-bounce">
@@ -368,9 +370,9 @@ export default function App() {
             <button
               onClick={() => {
                 playSoftClick(600);
-                setTheme(theme === "dark" ? "light" : "dark");
+                setTheme((prev) => (prev === "dark" ? "light" : "dark"));
               }}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200/70 dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 transition-colors"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200/70 dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -62,10 +64,4 @@
 
 .animate-pop {
   animation: tickPop 250ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Perforated receipt jagged effect */
-.receipt-sawtooth-top {
-  background-image: radial-gradient(circle at 10px -5px, transparent 12px, currentColor 13px);
-  background-size: 20px 20px;
 }
