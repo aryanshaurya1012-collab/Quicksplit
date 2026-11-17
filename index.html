@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="QuickSplit — a playful bill and tip calculator for splitting checks fairly with friends." />
+  <meta name="description" content="QuickSplit — A playful, modern bill and tip calculator for splitting checks fairly with friends." />
   <meta name="theme-color" content="#6d4aff" />
-  <title>QuickSplit — Bill & Tip Calculator</title>
+  <title>QuickSplit — Modern Bill & Tip Calculator</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Outfit:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Outfit:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
   <script>
     (function () {
@@ -26,9 +26,10 @@
   </script>
 </head>
 <body>
-  <a class="sr-only" href="#calculator">Skip to calculator</a>
+  <a class="skip-link" href="#calculator">Skip to calculator</a>
 
-  <header class="site-header">
+  <!-- Navigation Header -->
+  <header class="site-header" id="header">
     <div class="container header-inner">
       <a class="brand-link" href="#top" aria-label="QuickSplit home">
         <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
@@ -45,22 +46,38 @@
         <span class="brand-name">QuickSplit</span>
       </a>
 
-      <nav id="site-nav" class="site-nav" aria-label="Primary">
+      <nav id="site-nav" class="site-nav" aria-label="Primary navigation">
         <a href="#calculator" data-nav-link>Calculator</a>
         <a href="#how-it-works" data-nav-link>How it works</a>
+        <a href="#recent" data-nav-link>Recent splits</a>
+        <a href="#faq" data-nav-link>FAQ</a>
         <a href="#about" data-nav-link>About</a>
       </nav>
 
       <div class="header-actions">
-        <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Switch to dark theme">
-          <svg class="theme-toggle-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 3v2.2M12 18.8V21M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M3 12h2.2M18.8 12H21M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-            <circle cx="12" cy="12" r="3.4" stroke="currentColor" stroke-width="1.8" />
-          </svg>
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Switch theme">
+          <span class="theme-icon-slot" aria-hidden="true">
+            <!-- Moon icon (shown in light mode to switch to dark) -->
+            <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <!-- Sun icon (shown in dark mode to switch to light) -->
+            <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          </span>
           <span class="theme-toggle-label">Dark</span>
         </button>
 
-        <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation menu">
           <span class="nav-toggle-bars" aria-hidden="true">
             <span></span>
             <span></span>
@@ -71,15 +88,42 @@
     </div>
   </header>
 
+  <!-- Mobile Backdrop Overlay -->
+  <div class="nav-backdrop" id="nav-backdrop" aria-hidden="true"></div>
+
   <main id="top">
+    <!-- Hero Section -->
     <section class="hero" aria-labelledby="hero-title">
       <div class="container hero-grid">
-        <div>
-          <p class="hero-kicker"><span class="hero-kicker-dot" aria-hidden="true"></span> QuickSplit</p>
-          <h1 id="hero-title">Good food. Great company. No awkward math.</h1>
-          <p class="hero-lead">Split the bill, share the smiles.</p>
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span class="hero-badge-dot" aria-hidden="true"></span>
+            <span>QuickSplit 2.0 • Fair Bill Splitting</span>
+          </div>
+          <h1 id="hero-title">Good food. Great company. <span class="gradient-text">No awkward math.</span></h1>
+          <p class="hero-lead">
+            Calculate tips, split checks down to the cent or round up, and share the receipt with your group in seconds.
+          </p>
+
+          <div class="hero-highlights" aria-label="Key features">
+            <span class="highlight-chip">⚡ Live Math</span>
+            <span class="highlight-chip">🔒 100% Private</span>
+            <span class="highlight-chip">📱 Offline Ready</span>
+            <span class="highlight-chip">🌐 9 Currencies</span>
+          </div>
+
           <div class="hero-actions">
-            <a class="btn btn-primary" id="start-split-btn" href="#calculator">Start splitting</a>
+            <a class="btn btn-primary" id="start-split-btn" href="#calculator">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2" y="4" width="20" height="16" rx="3"></rect>
+                <line x1="6" y1="8" x2="10" y2="8"></line>
+                <line x1="14" y1="8" x2="18" y2="8"></line>
+                <line x1="6" y1="12" x2="10" y2="12"></line>
+                <line x1="14" y1="12" x2="18" y2="12"></line>
+                <line x1="6" y1="16" x2="18" y2="16"></line>
+              </svg>
+              Start splitting
+            </a>
             <a class="btn btn-ghost" href="#how-it-works">See how it works</a>
           </div>
         </div>
@@ -87,45 +131,56 @@
         <div class="hero-art" aria-hidden="true">
           <span class="hero-orb hero-orb-a"></span>
           <span class="hero-orb hero-orb-b"></span>
-          <svg class="hero-plate" viewBox="0 0 320 320" fill="none">
-            <circle cx="160" cy="160" r="138" fill="url(#plate-grad)" opacity="0.95" />
-            <circle cx="160" cy="160" r="108" stroke="#fff8ef" stroke-width="10" opacity="0.55" />
-            <path d="M98 168c18-42 48-62 78-62s60 20 78 62" stroke="#fff8ef" stroke-width="10" stroke-linecap="round" />
-            <circle cx="128" cy="132" r="10" fill="#FF6B6B" />
-            <circle cx="188" cy="124" r="14" fill="#FFD166" />
-            <circle cx="166" cy="168" r="18" fill="#1FB8A8" />
-            <rect x="236" y="78" width="42" height="12" rx="6" transform="rotate(28 236 78)" fill="#6D4AFF" />
-            <defs>
-              <linearGradient id="plate-grad" x1="60" y1="40" x2="260" y2="280" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#7C5CFC" />
-                <stop offset="0.55" stop-color="#FF6B6B" />
-                <stop offset="1" stop-color="#1FB8A8" />
-              </linearGradient>
-            </defs>
-          </svg>
+          <!-- Interactive Preview Card -->
+          <div class="hero-floating-card">
+            <div class="hfc-header">
+              <span class="hfc-title">Friday Dinner 🍕</span>
+              <span class="hfc-badge">4 friends</span>
+            </div>
+            <div class="hfc-row">
+              <span>Bill total</span>
+              <span class="hfc-val">₹2,400.00</span>
+            </div>
+            <div class="hfc-row">
+              <span>Tip (15%)</span>
+              <span class="hfc-val">+₹360.00</span>
+            </div>
+            <div class="hfc-divider"></div>
+            <div class="hfc-highlight">
+              <span class="hfc-hl-label">Each pays</span>
+              <span class="hfc-hl-val">₹690.00</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
+    <!-- Calculator Section -->
     <section class="section" id="calculator" aria-labelledby="calculator-title">
       <div class="container">
         <header class="section-header">
-          <p class="section-eyebrow">Calculator</p>
+          <p class="section-eyebrow">Interactive Calculator</p>
           <h2 id="calculator-title">Split any bill in seconds</h2>
-          <p>Enter the amount, pick a tip, choose your people — watch the receipt update live.</p>
+          <p>Enter the bill, pick your tip, choose group size, and get a clean itemized receipt instantly.</p>
         </header>
 
         <div class="calculator-layout">
-          <div class="panel">
-            <h3 class="panel-title">Your bill</h3>
+          <!-- Form Panel -->
+          <div class="panel form-panel">
+            <div class="panel-header-row">
+              <h3 class="panel-title">Bill Details</h3>
+              <span class="panel-badge">Step 1 &amp; 2</span>
+            </div>
+
             <form id="split-form" novalidate>
+              <!-- Bill Amount -->
               <div class="field">
                 <div class="field-label">
                   <label for="bill">Bill amount</label>
                   <span class="hint" id="bill-hint" role="status" aria-live="polite"></span>
                 </div>
                 <div class="input-shell" id="bill-shell">
-                  <span class="affix" id="currency-symbol" aria-hidden="true">₹</span>
+                  <span class="affix affix-currency" id="currency-symbol" aria-hidden="true">₹</span>
                   <input
                     id="bill"
                     name="bill"
@@ -137,19 +192,37 @@
                     autocomplete="off"
                     aria-describedby="bill-hint"
                   />
+                  <button type="button" class="input-clear-btn" id="bill-clear" aria-label="Clear bill amount" hidden>
+                    &times;
+                  </button>
+                </div>
+                <!-- Quick add bill shortcuts -->
+                <div class="quick-chips" aria-label="Quick add amounts">
+                  <span class="quick-chips-label">Quick add:</span>
+                  <button type="button" class="chip-btn" data-add="10">+10</button>
+                  <button type="button" class="chip-btn" data-add="50">+50</button>
+                  <button type="button" class="chip-btn" data-add="100">+100</button>
+                  <button type="button" class="chip-btn" data-add="500">+500</button>
                 </div>
               </div>
 
+              <!-- Currency Selection -->
               <div class="field">
                 <div class="field-label">
                   <label for="currency">Currency</label>
+                  <span class="field-subtext">Formatting only</span>
                 </div>
                 <div class="select-shell">
                   <select id="currency" name="currency" aria-describedby="currency-note">
-                    <option value="INR">INR (₹)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="GBP">GBP (£)</option>
+                    <option value="INR">INR (₹) — Indian Rupee</option>
+                    <option value="USD">USD ($) — US Dollar</option>
+                    <option value="EUR">EUR (€) — Euro</option>
+                    <option value="GBP">GBP (£) — British Pound</option>
+                    <option value="CAD">CAD (CA$) — Canadian Dollar</option>
+                    <option value="AUD">AUD (A$) — Australian Dollar</option>
+                    <option value="JPY">JPY (¥) — Japanese Yen</option>
+                    <option value="SGD">SGD (S$) — Singapore Dollar</option>
+                    <option value="AED">AED (د.إ) — UAE Dirham</option>
                   </select>
                 </div>
                 <p id="currency-note" class="sr-only">
@@ -157,17 +230,21 @@
                 </p>
               </div>
 
+              <!-- Tip Selection -->
               <fieldset class="field">
-                <legend class="sr-only">Tip</legend>
+                <legend class="sr-only">Tip percentage</legend>
                 <div class="field-label">
-                  <span class="label-text" id="tip-label">Tip</span>
+                  <span class="label-text" id="tip-label">Tip percentage</span>
                   <span class="hint" id="tip-hint" role="status" aria-live="polite"></span>
                 </div>
                 <div class="tip-grid" role="group" aria-labelledby="tip-label">
+                  <button type="button" class="tip-btn" data-tip="0" aria-pressed="false">0%</button>
                   <button type="button" class="tip-btn" data-tip="5" aria-pressed="false">5%</button>
                   <button type="button" class="tip-btn" data-tip="10" aria-pressed="false">10%</button>
                   <button type="button" class="tip-btn" data-tip="15" aria-pressed="true">15%</button>
+                  <button type="button" class="tip-btn" data-tip="18" aria-pressed="false">18%</button>
                   <button type="button" class="tip-btn" data-tip="20" aria-pressed="false">20%</button>
+                  <button type="button" class="tip-btn" data-tip="25" aria-pressed="false">25%</button>
                 </div>
                 <div class="custom-tip input-shell" id="custom-tip-shell">
                   <label class="sr-only" for="custom-tip">Custom tip percentage</label>
@@ -177,6 +254,7 @@
                     type="number"
                     inputmode="decimal"
                     min="0"
+                    max="1000"
                     step="0.1"
                     placeholder="Custom %"
                     autocomplete="off"
@@ -186,13 +264,14 @@
                 </div>
               </fieldset>
 
+              <!-- Number of People -->
               <div class="field">
                 <div class="field-label">
-                  <label for="people">People</label>
+                  <label for="people">Number of people</label>
                   <span class="hint" id="people-hint" role="status" aria-live="polite"></span>
                 </div>
                 <div class="people-controls">
-                  <button type="button" class="stepper-btn" id="people-minus" aria-label="Decrease number of people">−</button>
+                  <button type="button" class="stepper-btn" id="people-minus" aria-label="Decrease number of people" disabled>−</button>
                   <div class="input-shell" id="people-shell">
                     <input
                       id="people"
@@ -200,6 +279,7 @@
                       type="number"
                       inputmode="numeric"
                       min="1"
+                      max="1000"
                       step="1"
                       value="1"
                       placeholder="1"
@@ -209,102 +289,193 @@
                   </div>
                   <button type="button" class="stepper-btn" id="people-plus" aria-label="Increase number of people">+</button>
                 </div>
+                <!-- Quick People Chips -->
+                <div class="quick-chips" aria-label="Quick people presets">
+                  <span class="quick-chips-label">Popular sizes:</span>
+                  <button type="button" class="chip-btn people-chip" data-people="1">1</button>
+                  <button type="button" class="chip-btn people-chip" data-people="2">2</button>
+                  <button type="button" class="chip-btn people-chip" data-people="3">3</button>
+                  <button type="button" class="chip-btn people-chip" data-people="4">4</button>
+                  <button type="button" class="chip-btn people-chip" data-people="5">5</button>
+                  <button type="button" class="chip-btn people-chip" data-people="6">6</button>
+                  <button type="button" class="chip-btn people-chip" data-people="8">8</button>
+                </div>
+              </div>
+
+              <!-- Round Up Feature Toggle -->
+              <div class="field round-up-field">
+                <div class="toggle-container">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="round-up" name="round-up" />
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                  </label>
+                  <div class="toggle-label-wrap">
+                    <label for="round-up" class="toggle-title">Round up per person</label>
+                    <p class="toggle-desc">Rounds shares to the next whole currency unit; extra cents go to the tip.</p>
+                  </div>
+                </div>
               </div>
             </form>
           </div>
 
-          <div class="panel receipt" aria-live="polite" aria-atomic="true" aria-label="Calculation results">
-            <h3 class="panel-title">Receipt</h3>
+          <!-- Receipt Panel -->
+          <div class="panel receipt" aria-live="polite" aria-atomic="true" aria-label="Calculation receipt">
+            <!-- Receipt Header -->
+            <div class="receipt-header">
+              <div class="receipt-stamp">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16l3-2 3 2 3-2 3 2 3-2 3 2V4a2 2 0 0 0-2-2z"></path>
+                  <line x1="8" y1="6" x2="16" y2="6"></line>
+                  <line x1="8" y1="10" x2="16" y2="10"></line>
+                  <line x1="8" y1="14" x2="12" y2="14"></line>
+                </svg>
+                <span>QUICKSPLIT RECEIPT</span>
+              </div>
+              <span class="receipt-date" id="receipt-date">Live</span>
+            </div>
+
+            <div class="receipt-divider" aria-hidden="true"></div>
+
+            <!-- Line Items -->
             <div class="result-row">
-              <span class="result-label">Original bill</span>
+              <span class="result-label">Subtotal (Bill)</span>
               <span class="result-value" id="original-bill">₹0.00</span>
             </div>
             <div class="result-row">
-              <span class="result-label">Tip percentage</span>
+              <span class="result-label">Tip rate</span>
               <span class="result-value" id="tip-percent-display">15%</span>
             </div>
             <div class="result-row">
               <span class="result-label">Tip amount</span>
               <span class="result-value" id="tip-amount">₹0.00</span>
             </div>
-            <div class="result-row">
-              <span class="result-label">Total bill</span>
+            <div class="result-row" id="rounding-row" hidden>
+              <span class="result-label">Rounding adjustment</span>
+              <span class="result-value highlight-green" id="rounding-amount">+₹0.00</span>
+            </div>
+            <div class="result-row result-row-total">
+              <span class="result-label">Total check</span>
               <span class="result-value" id="total-bill">₹0.00</span>
             </div>
             <div class="result-row">
-              <span class="result-label">People</span>
-              <span class="result-value" id="people-count-display">1</span>
-            </div>
-            <div class="per-person">
-              <span class="per-person-label">Amount per person</span>
-              <span class="per-person-value" id="per-person">₹0.00</span>
+              <span class="result-label">Group size</span>
+              <span class="result-value" id="people-count-display">1 person</span>
             </div>
 
-            <div class="actions">
-              <button type="button" class="action-btn" id="copy-btn" disabled>Copy summary</button>
-              <button type="button" class="action-btn action-btn-accent" id="share-btn" disabled>Share summary</button>
-              <button type="button" class="action-btn" id="reset-btn">Reset</button>
+            <!-- Hero Per-Person Highlight -->
+            <div class="per-person" id="per-person-card">
+              <span class="per-person-label">Each Person Pays</span>
+              <span class="per-person-value" id="per-person">₹0.00</span>
+              <span class="per-person-note" id="per-person-note">Evenly split</span>
             </div>
-            <p class="action-status" id="action-status" role="status" aria-live="polite"></p>
+
+            <!-- Action Buttons -->
+            <div class="actions">
+              <button type="button" class="action-btn" id="copy-btn" disabled>
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span>Copy</span>
+              </button>
+              <button type="button" class="action-btn action-btn-accent" id="share-btn" disabled>
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="18" cy="5" r="3"></circle>
+                  <circle cx="6" cy="12" r="3"></circle>
+                  <circle cx="18" cy="19" r="3"></circle>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+                <span>Share</span>
+              </button>
+              <button type="button" class="action-btn action-btn-reset" id="reset-btn">
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="1 4 1 10 7 10"></polyline>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+                <span>Reset</span>
+              </button>
+            </div>
+
+            <!-- Action Feedback Toast -->
+            <div class="action-status-container">
+              <p class="action-status" id="action-status" role="status" aria-live="polite"></p>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- How It Works Section -->
     <section class="section" id="how-it-works" aria-labelledby="how-title">
       <div class="container">
         <header class="section-header">
-          <p class="section-eyebrow">How it works</p>
+          <p class="section-eyebrow">Simplicity First</p>
           <h2 id="how-title">Three easy steps</h2>
-          <p>No spreadsheets. No calculator apps. Just a cleaner way to settle up.</p>
+          <p>No spreadsheets, no confusing sign-ins. Just a straightforward way to settle up.</p>
         </header>
 
         <div class="steps">
           <article class="step">
-            <span class="step-number">Step 1</span>
-            <svg class="step-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-              <rect x="6" y="10" width="36" height="28" rx="8" fill="#6D4AFF" opacity="0.15" />
-              <path d="M14 24h20M14 30h12" stroke="#6D4AFF" stroke-width="2.5" stroke-linecap="round" />
-              <circle cx="34" cy="16" r="6" fill="#FFD166" />
-            </svg>
+            <span class="step-number">Step 01</span>
+            <div class="step-icon-wrap step-icon-violet">
+              <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2" y="4" width="20" height="16" rx="3"></rect>
+                <line x1="2" y1="10" x2="22" y2="10"></line>
+                <circle cx="7" cy="15" r="1"></circle>
+                <circle cx="12" cy="15" r="1"></circle>
+              </svg>
+            </div>
             <h3>Enter the bill</h3>
-            <p>Type the check total and pick a currency for formatting.</p>
+            <p>Type your check subtotal and pick your preferred currency for clean localized formatting.</p>
           </article>
 
           <article class="step">
-            <span class="step-number">Step 2</span>
-            <svg class="step-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-              <circle cx="24" cy="24" r="16" fill="#FF6B6B" opacity="0.16" />
-              <path d="M18 25l5 5 9-12" stroke="#FF6B6B" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+            <span class="step-number">Step 02</span>
+            <div class="step-icon-wrap step-icon-coral">
+              <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </div>
             <h3>Choose your tip</h3>
-            <p>Tap a preset or enter a custom percentage that fits the night.</p>
+            <p>Tap a preset or set custom %. Toggle "Round up" if you prefer clean whole-currency payments.</p>
           </article>
 
           <article class="step">
-            <span class="step-number">Step 3</span>
-            <svg class="step-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-              <circle cx="16" cy="22" r="7" fill="#1FB8A8" opacity="0.25" />
-              <circle cx="32" cy="22" r="7" fill="#6D4AFF" opacity="0.25" />
-              <path d="M10 36c2.5-5 7-8 14-8s11.5 3 14 8" stroke="#1FB8A8" stroke-width="2.5" stroke-linecap="round" />
-            </svg>
-            <h3>Split and enjoy</h3>
-            <p>See everyone’s share instantly, then copy or share the summary.</p>
+            <span class="step-number">Step 03</span>
+            <div class="step-icon-wrap step-icon-teal">
+              <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <h3>Split &amp; share</h3>
+            <p>See each person's fair share instantly, then copy or share a complete summary to group chat.</p>
           </article>
         </div>
       </div>
     </section>
 
+    <!-- Recent Splits Section -->
     <section class="section" id="recent" aria-labelledby="recent-title">
       <div class="container">
-        <header class="section-header">
-          <p class="section-eyebrow">Recent splits</p>
-          <h2 id="recent-title">Pick up where you left off</h2>
-          <p>A few recent calculations stay on this device so you can restore them quickly.</p>
-        </header>
-
-        <div class="history-toolbar">
-          <button type="button" class="btn btn-ghost" id="clear-history-btn" disabled>Clear history</button>
+        <div class="section-header-split">
+          <header class="section-header">
+            <p class="section-eyebrow">Local Storage</p>
+            <h2 id="recent-title">Recent splits</h2>
+            <p>Your recent calculations are securely preserved on this device for instant restoration.</p>
+          </header>
+          <div class="history-toolbar">
+            <button type="button" class="btn btn-ghost btn-sm" id="clear-history-btn" disabled>
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              Clear all history
+            </button>
+          </div>
         </div>
 
         <div class="history-empty" id="history-empty">
@@ -313,78 +484,166 @@
             <path d="M30 40h36M30 52h24" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.45" />
             <circle cx="68" cy="28" r="10" fill="#FFD166" opacity="0.9" />
           </svg>
-          <p>No recent splits yet. Calculate a bill and it will show up here.</p>
+          <p class="history-empty-title">No recent splits yet</p>
+          <p class="history-empty-desc">Calculate a bill above and your summary will appear here automatically.</p>
         </div>
 
         <div class="history-list" id="history-list" hidden></div>
       </div>
     </section>
 
+    <!-- FAQ Section -->
     <section class="section" id="faq" aria-labelledby="faq-title">
       <div class="container">
         <header class="section-header">
-          <p class="section-eyebrow">FAQ</p>
+          <p class="section-eyebrow">Frequently Asked Questions</p>
           <h2 id="faq-title">Quick answers</h2>
-          <p>Simple details about tips, currency formatting, and equal splits.</p>
+          <p>Everything you need to know about the math, rounding, and privacy.</p>
         </header>
 
         <div class="faq-list">
-          <details class="faq-item">
-            <summary>How is the tip calculated?</summary>
-            <p>Tip amount equals bill amount × tip percentage ÷ 100. The total bill is the original amount plus that tip.</p>
+          <details class="faq-item" open>
+            <summary>How is the tip and split calculated?</summary>
+            <div class="faq-content">
+              <p>The calculation is strictly transparent:</p>
+              <ul>
+                <li><strong>Tip Amount</strong> = Bill Subtotal &times; Tip % &divide; 100</li>
+                <li><strong>Total Bill</strong> = Bill Subtotal + Tip Amount</li>
+                <li><strong>Amount Per Person</strong> = Total Bill &divide; Number of People</li>
+              </ul>
+            </div>
           </details>
+
           <details class="faq-item">
-            <summary>Does changing currency convert the amount?</summary>
-            <p>No. Currency only changes how numbers are formatted with Intl.NumberFormat. QuickSplit does not perform live exchange-rate conversion.</p>
+            <summary>How does the "Round up per person" option work?</summary>
+            <div class="faq-content">
+              <p>
+                When enabled, each person's share is rounded up to the nearest whole currency unit (for instance, $17.40 becomes $18.00).
+                The accumulated difference across all people is automatically added to the server's tip as a rounding bonus.
+                No one has to scramble for loose coins!
+              </p>
+            </div>
           </details>
+
           <details class="faq-item">
-            <summary>How does equal splitting work?</summary>
-            <p>The total bill (including tip) is divided evenly by the number of people. Everyone pays the same share.</p>
+            <summary>Does changing currency convert exchange rates?</summary>
+            <div class="faq-content">
+              <p>
+                No. QuickSplit formats numbers according to your selected currency symbol and regional conventions via the browser's native <code>Intl.NumberFormat</code> API.
+                It does not convert exchange rates or require live internet access.
+              </p>
+            </div>
           </details>
+
           <details class="faq-item">
-            <summary>Where is my history stored?</summary>
-            <p>Recent splits and your theme preference are saved in this browser’s localStorage on your device. Nothing sensitive is uploaded.</p>
+            <summary>Is my data private? Where is history stored?</summary>
+            <div class="faq-content">
+              <p>
+                <strong>100% private.</strong> All calculations run entirely inside your browser.
+                Your theme choice, currency preference, and recent splits are saved strictly in your device's <code>localStorage</code>.
+                No cookies, no trackers, and no data is ever transmitted to a server.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>Can I use QuickSplit offline?</summary>
+            <div class="faq-content">
+              <p>
+                Yes! Once loaded, QuickSplit uses plain HTML, CSS, and vanilla JavaScript without any dynamic remote dependencies.
+                It continues to work seamlessly on airplane mode or spotty restaurant Wi-Fi.
+              </p>
+            </div>
           </details>
         </div>
       </div>
     </section>
 
+    <!-- About Section -->
     <section class="section" id="about" aria-labelledby="about-title">
       <div class="container about-panel">
         <div class="about-copy">
-          <p class="section-eyebrow">About</p>
+          <p class="section-eyebrow">About QuickSplit</p>
           <h2 class="section-title" id="about-title">Built for dinner tables, not spreadsheets</h2>
           <p>
-            QuickSplit started as a tiny tip calculator and grew into a friendly companion for group dinners,
-            café catch-ups, and shared rides. Equal splits, clear receipts, zero awkwardness.
+            QuickSplit was crafted to make ending meals with friends effortless.
+            No sign-ups, no downloading bulky apps, no intrusive ads — just clean math, fair splits, and clear receipts.
           </p>
+          <div class="about-stats">
+            <div class="stat-item">
+              <span class="stat-num">0</span>
+              <span class="stat-label">Ad Trackers</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-num">9</span>
+              <span class="stat-label">Currencies</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-num">100%</span>
+              <span class="stat-label">Client-Side</span>
+            </div>
+          </div>
         </div>
-        <svg class="about-art" viewBox="0 0 260 180" fill="none" aria-hidden="true">
-          <rect x="20" y="30" width="150" height="120" rx="18" fill="#6D4AFF" opacity="0.12" />
-          <rect x="70" y="18" width="150" height="120" rx="18" fill="#1FB8A8" opacity="0.14" />
-          <path d="M96 78h78M96 98h52" stroke="#6D4AFF" stroke-width="6" stroke-linecap="round" />
-          <circle cx="196" cy="48" r="16" fill="#FF6B6B" />
-          <circle cx="54" cy="128" r="12" fill="#FFD166" />
-        </svg>
+
+        <div class="about-art-wrap" aria-hidden="true">
+          <svg class="about-art" viewBox="0 0 260 180" fill="none">
+            <rect x="20" y="30" width="150" height="120" rx="18" fill="#6D4AFF" opacity="0.14" />
+            <rect x="70" y="18" width="150" height="120" rx="18" fill="#1FB8A8" opacity="0.16" />
+            <path d="M96 78h78M96 98h52" stroke="#6D4AFF" stroke-width="5" stroke-linecap="round" />
+            <circle cx="196" cy="48" r="16" fill="#FF6B6B" />
+            <circle cx="54" cy="128" r="12" fill="#FFD166" />
+          </svg>
+        </div>
       </div>
     </section>
   </main>
 
+  <!-- Site Footer -->
   <footer class="site-footer">
     <div class="container footer-grid">
-      <div>
-        <p class="footer-brand">QuickSplit</p>
+      <div class="footer-info">
+        <div class="footer-brand-wrap">
+          <svg class="brand-mark-sm" viewBox="0 0 64 64" aria-hidden="true">
+            <rect width="64" height="64" rx="16" fill="url(#brand-grad)" />
+            <path d="M18 22h28v4.5H28.8L40 44h-6.2L22.4 26.5H18V22z" fill="#FFF8EF" />
+            <circle cx="44" cy="20" r="5" fill="#FFD166" />
+          </svg>
+          <span class="footer-brand">QuickSplit</span>
+        </div>
         <p class="footer-tagline">Split the bill, share the smiles.</p>
-        <p class="footer-meta">Built with HTML, CSS &amp; vanilla JavaScript.</p>
+        <p class="footer-meta">Crafted with semantic HTML, modern CSS &amp; vanilla JavaScript.</p>
       </div>
-      <div class="footer-links">
-        <a href="#calculator">Calculator</a>
-        <a href="#faq">FAQ</a>
-        <a href="https://github.com/aryanshaurya1012-collab/Quicksplit" rel="noopener noreferrer" target="_blank">GitHub</a>
+
+      <div class="footer-nav">
+        <div class="footer-column">
+          <span class="footer-col-title">Navigation</span>
+          <a href="#calculator">Calculator</a>
+          <a href="#how-it-works">How it works</a>
+          <a href="#recent">Recent splits</a>
+          <a href="#faq">FAQ</a>
+        </div>
+        <div class="footer-column">
+          <span class="footer-col-title">Project</span>
+          <a href="#about">About</a>
+          <a href="https://github.com/aryanshaurya1012-collab/Quicksplit" rel="noopener noreferrer" target="_blank">
+            GitHub Repo ↗
+          </a>
+        </div>
       </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; <span id="current-year">2026</span> QuickSplit. Open source under MIT license.</p>
     </div>
   </footer>
 
+  <!-- Floating Back to Top Button -->
+  <button type="button" class="back-to-top" id="back-to-top" aria-label="Back to top" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polyline points="18 15 12 9 6 15"></polyline>
+    </svg>
+  </button>
+
+  <!-- Scripts -->
   <script src="js/calculator.js" defer></script>
   <script src="js/storage.js" defer></script>
   <script src="js/app.js" defer></script>
