@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import confetti from "canvas-confetti";
+import QRCode from "qrcode";
 import {
   Calculator,
   Moon,
@@ -27,12 +28,12 @@ import {
   ArrowUp,
   ArrowRight,
   ExternalLink,
-  Zap,
+  BookmarkPlus,
   CheckCircle2,
   Clock,
   Utensils,
   HelpCircle,
-  Info
+  UserPlus
 } from "lucide-react";
 import {
   CURRENCIES,
@@ -100,6 +101,8 @@ export default function App() {
 
   // Group / Friends state
   const [friends, setFriends] = useState(DEFAULT_FRIENDS);
+  const [newFriendName, setNewFriendName] = useState("");
+  const [showAddFriendInput, setShowAddFriendInput] = useState(false);
   const [editingFriendId, setEditingFriendId] = useState(null);
 
   // Itemized Mode State
@@ -115,6 +118,7 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState("");
   const [showQRModal, setShowQRModal] = useState(false);
   const [upiId, setUpiId] = useState("yourname@upi");
+  const [offlineQrDataUrl, setOfflineQrDataUrl] = useState("");
 
   // History state
   const [history, setHistory] = useState(() => {
@@ -127,6 +131,7 @@ export default function App() {
   });
 
   const billInputRef = useRef(null);
+  const newFriendInputRef = useRef(null);
 
   // Sound wrapper
   const triggerSound = (freq = 600, duration = 0.04) => {
@@ -221,12 +226,12 @@ export default function App() {
         total: itemizedSplit.total,
         people: friends.length,
         perPerson: friends.length > 0 ? itemizedSplit.total / friends.length : 0,
-        isRounded: roundUp,
-        roundingDifference: 0
+        isRounded: itemizedSplit.isRounded,
+        roundingDifference: itemizedSplit.roundingDifference
       };
     }
     return equalSplit;
-  }, [splitMode, equalSplit, itemizedSplit, friends.length, roundUp]);
+  }, [splitMode, equalSplit, itemizedSplit, friends.length]);
 
   // Toast feedback helper
   const showToast = (message) => {
@@ -236,7 +241,7 @@ export default function App() {
     }, 2800);
   };
 
-  // Adjust friends count
+  // Adjust friends count with stepper / presets
   const handleSetPeopleCount = (count) => {
     triggerSound(480);
     const target = Math.max(1, Math.min(20, count));
@@ -257,6 +262,56 @@ export default function App() {
     } else {
       setFriends(friends.slice(0, target));
     }
+  };
+
+  // Add individual friend by custom name
+  const handleAddCustomFriend = (e) => {
+    if (e) e.preventDefault();
+    const name = newFriendName.trim() || `Person ${friends.length + 1}`;
+    if (friends.length >= 20) {
+      showToast("Maximum 20 people allowed");
+      return;
+    }
+
+    triggerSound(580);
+    const color = AVATAR_COLORS[friends.length % AVATAR_COLORS.length];
+    const newFriend = {
+      id: `p_${Date.now()}`,
+      name,
+      color,
+      paid: false
+    };
+
+    setFriends((prev) => [...prev, newFriend]);
+    setNewFriendName("");
+    setShowAddFriendInput(false);
+    showToast(`Added ${name} to group`);
+  };
+
+  // Remove a specific friend by ID
+  const handleRemoveFriend = (friendId, e) => {
+    if (e) e.stopPropagation();
+    if (friends.length <= 1) {
+      showToast("Group must have at least 1 person");
+      return;
+    }
+
+    triggerSound(350);
+    const friendToRemove = friends.find((f) => f.id === friendId);
+    setFriends((prev) => prev.filter((f) => f.id !== friendId));
+
+    // Also remove from any itemized items
+    setItems((prev) =>
+      prev.map((item) => {
+        const remaining = (item.sharedBy || []).filter((id) => id !== friendId);
+        return {
+          ...item,
+          sharedBy: remaining.length > 0 ? remaining : friends.filter((f) => f.id !== friendId).map((f) => f.id)
+        };
+      })
+    );
+
+    showToast(`Removed ${friendToRemove?.name || "person"}`);
   };
 
   // Toggle friend paid status
@@ -280,6 +335,13 @@ export default function App() {
     triggerSound(650);
     const next = numericBill + amount;
     setBillInput(String(next));
+  };
+
+  // Quick add for Itemized item price
+  const handleItemQuickAdd = (amount) => {
+    triggerSound(650);
+    const current = parseFloat(newItemPrice) || 0;
+    setNewItemPrice(String(current + amount));
   };
 
   // Itemized: Add new item
@@ -330,19 +392,34 @@ export default function App() {
   // Reset form
   const handleReset = () => {
     triggerSound(400);
-    setBillInput("");
-    setTipPercent(15);
-    setIsCustomTip(false);
-    setCustomTipInput("");
-    setRoundUp(false);
-    setFriends(DEFAULT_FRIENDS);
-    showToast("Calculator reset to defaults");
-    if (billInputRef.current) billInputRef.current.focus();
+    if (splitMode === "equal") {
+      setBillInput("");
+      setTipPercent(15);
+      setIsCustomTip(false);
+      setCustomTipInput("");
+      setRoundUp(false);
+      setFriends(DEFAULT_FRIENDS);
+      showToast("Equal split reset to defaults");
+      if (billInputRef.current) billInputRef.current.focus();
+    } else {
+      setItems([]);
+      setNewItemName("");
+      setNewItemPrice("");
+      setTipPercent(15);
+      setIsCustomTip(false);
+      setCustomTipInput("");
+      setRoundUp(false);
+      showToast("Itemized order list cleared");
+    }
   };
 
-  // Save to History
-  const saveToHistory = () => {
-    if (activeSplit.bill <= 0) return;
+  // Save to History (supports both Equal and Itemized splits)
+  const saveToHistory = (silent = false) => {
+    if (activeSplit.bill <= 0) {
+      if (!silent) showToast("Enter a bill amount before saving");
+      return;
+    }
+
     const entry = {
       id: String(Date.now()),
       mode: splitMode,
@@ -354,9 +431,20 @@ export default function App() {
       perPerson: activeSplit.perPerson,
       isRounded: activeSplit.isRounded,
       currency,
+      items: splitMode === "itemized" ? items : undefined,
+      friends: friends.map((f) => ({ id: f.id, name: f.name, color: f.color })),
       timestamp: new Date().toISOString()
     };
-    setHistory((prev) => [entry, ...prev.filter((item) => item.bill !== entry.bill || item.people !== entry.people)].slice(0, 10));
+
+    setHistory((prev) => [
+      entry,
+      ...prev.filter((item) => item.bill !== entry.bill || item.total !== entry.total || item.mode !== entry.mode)
+    ].slice(0, 10));
+
+    if (!silent) {
+      triggerSound(700);
+      showToast("Split saved to Recent Splits! 💾");
+    }
   };
 
   // Copy summary
@@ -367,10 +455,13 @@ export default function App() {
       return;
     }
 
-    const text = buildReceiptSummary(activeSplit, currency, friends);
+    const isItemized = splitMode === "itemized";
+    const friendData = isItemized ? itemizedSplit.breakdown : friends;
+    const text = buildReceiptSummary(activeSplit, currency, friendData, items, isItemized);
+
     try {
       await navigator.clipboard.writeText(text);
-      saveToHistory();
+      saveToHistory(true);
       confetti({
         particleCount: 80,
         spread: 60,
@@ -390,14 +481,17 @@ export default function App() {
       return;
     }
 
-    const text = buildReceiptSummary(activeSplit, currency, friends);
+    const isItemized = splitMode === "itemized";
+    const friendData = isItemized ? itemizedSplit.breakdown : friends;
+    const text = buildReceiptSummary(activeSplit, currency, friendData, items, isItemized);
+
     if (navigator.share) {
       try {
         await navigator.share({
           title: "QuickSplit — Bill Summary",
           text
         });
-        saveToHistory();
+        saveToHistory(true);
         showToast("Shared successfully!");
       } catch (e) {
         if (e.name !== "AbortError") {
@@ -412,7 +506,7 @@ export default function App() {
   // Print Receipt
   const handlePrintReceipt = () => {
     triggerSound(500);
-    saveToHistory();
+    saveToHistory(true);
     window.print();
   };
 
@@ -421,14 +515,26 @@ export default function App() {
     triggerSound(550);
     setCurrency(item.currency || DEFAULT_CURRENCY);
     setSplitMode(item.mode || "equal");
-    setBillInput(String(item.bill));
+
+    if (item.mode === "itemized" && Array.isArray(item.items) && item.items.length > 0) {
+      setItems(item.items);
+    } else {
+      setBillInput(String(item.bill));
+    }
+
     setTipPercent(item.tipPercent);
     setIsCustomTip(!TIP_PRESETS.includes(item.tipPercent));
     if (!TIP_PRESETS.includes(item.tipPercent)) {
       setCustomTipInput(String(item.tipPercent));
     }
     setRoundUp(Boolean(item.isRounded));
-    handleSetPeopleCount(item.people);
+
+    if (Array.isArray(item.friends) && item.friends.length > 0) {
+      setFriends(item.friends.map((f) => ({ ...f, paid: false })));
+    } else {
+      handleSetPeopleCount(item.people || 4);
+    }
+
     showToast(`Restored split of ${formatCurrency(item.bill, item.currency)}`);
     const calcElement = document.getElementById("calculator");
     if (calcElement) calcElement.scrollIntoView({ behavior: "smooth" });
@@ -451,10 +557,34 @@ export default function App() {
 
   // Generate UPI payment URL
   const upiPaymentUrl = useMemo(() => {
-    const amount = activeSplit.perPerson.toFixed(2);
+    const amount = (splitMode === "itemized" && friends.length > 0 ? (activeSplit.total / friends.length) : activeSplit.perPerson).toFixed(2);
     const note = encodeURIComponent("QuickSplit bill share");
     return `upi://pay?pa=${encodeURIComponent(upiId)}&pn=QuickSplit&am=${amount}&cu=INR&tn=${note}`;
-  }, [upiId, activeSplit.perPerson]);
+  }, [upiId, activeSplit.perPerson, activeSplit.total, splitMode, friends.length]);
+
+  // Generate offline QR Code data URL whenever upiPaymentUrl or showQRModal changes
+  useEffect(() => {
+    if (!showQRModal) return;
+    let isMounted = true;
+    QRCode.toDataURL(upiPaymentUrl, {
+      width: 220,
+      margin: 2,
+      color: {
+        dark: "#1e1b4b",
+        light: "#ffffff"
+      }
+    })
+      .then((url) => {
+        if (isMounted) setOfflineQrDataUrl(url);
+      })
+      .catch(() => {
+        if (isMounted) setOfflineQrDataUrl("");
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [upiPaymentUrl, showQRModal]);
 
   const quickAmounts = QUICK_ADD_AMOUNTS[currency] || QUICK_ADD_AMOUNTS.USD;
 
@@ -533,7 +663,7 @@ export default function App() {
             </button>
           </nav>
 
-          {/* Controls: Sound, Currency, Theme & Mobile Menu */}
+          {/* Controls: Mode, Sound, Currency, Theme & Mobile Menu */}
           <div className="flex items-center gap-2 sm:gap-2.5">
             {/* Mode Switcher Tabs (Desktop) */}
             <div className="hidden lg:flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
@@ -1002,83 +1132,106 @@ export default function App() {
                   </div>
 
                   {/* Add Item Form */}
-                  <form onSubmit={handleAddItem} className="flex gap-2 mb-4">
-                    <input
-                      type="text"
-                      placeholder="e.g. Pizza, Pasta, Drinks"
-                      value={newItemName}
-                      onChange={(e) => setNewItemName(e.target.value)}
-                      className="flex-1 px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#1a162e] focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                    <div className="relative w-28 sm:w-32">
-                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-slate-400">
-                        {CURRENCIES[currency]?.symbol}
-                      </span>
+                  <form onSubmit={handleAddItem} className="space-y-3 mb-4">
+                    <div className="flex gap-2">
                       <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        value={newItemPrice}
-                        onChange={(e) => setNewItemPrice(e.target.value)}
-                        className="w-full pl-6 pr-2.5 py-2 text-sm font-mono rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#1a162e] focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        type="text"
+                        placeholder="e.g. Pizza, Pasta, Drinks"
+                        value={newItemName}
+                        onChange={(e) => setNewItemName(e.target.value)}
+                        className="flex-1 px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#1a162e] focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
+                      <div className="relative w-28 sm:w-36">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-slate-400">
+                          {CURRENCIES[currency]?.symbol}
+                        </span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="0.00"
+                          value={newItemPrice}
+                          onChange={(e) => setNewItemPrice(e.target.value)}
+                          className="w-full pl-6 pr-2.5 py-2 text-sm font-mono rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#1a162e] focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Add
+                      </button>
                     </div>
-                    <button
-                      type="submit"
-                      className="px-3.5 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors"
-                    >
-                      <Plus className="w-3.5 h-3.5" /> Add
-                    </button>
+
+                    {/* Quick Add Chips for Item Price */}
+                    <div className="flex items-center flex-wrap gap-1.5 pt-1">
+                      <span className="text-[11px] text-slate-400 font-medium">Quick price:</span>
+                      {quickAmounts.slice(0, 4).map((amt) => (
+                        <button
+                          key={amt}
+                          type="button"
+                          onClick={() => handleItemQuickAdd(amt)}
+                          className="px-2 py-0.5 text-[11px] font-bold rounded-md bg-slate-100 hover:bg-teal-50 dark:bg-slate-800 dark:hover:bg-teal-950/40 text-slate-600 dark:text-slate-300 hover:text-teal-600 border border-slate-200 dark:border-slate-700 cursor-pointer"
+                        >
+                          +{amt}
+                        </button>
+                      ))}
+                    </div>
                   </form>
 
                   {/* Items List */}
-                  <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                    {items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 text-xs space-y-2"
-                      >
-                        <div className="flex items-center justify-between font-semibold">
-                          <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{item.name}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-sm font-extrabold text-teal-600 dark:text-teal-400">
-                              {formatCurrency(Number(item.price), currency)}
-                            </span>
-                            <button
-                              onClick={() => handleDeleteItem(item.id)}
-                              className="p-1 text-slate-400 hover:text-rose-500 rounded cursor-pointer transition-colors"
-                              title="Delete item"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                  {items.length === 0 ? (
+                    <div className="p-6 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-slate-400 text-xs">
+                      No items added yet. Enter a dish or drink name and price above to start itemizing!
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                      {items.map((item) => (
+                        <div
+                          key={item.id}
+                          className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 text-xs space-y-2"
+                        >
+                          <div className="flex items-center justify-between font-semibold">
+                            <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{item.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-sm font-extrabold text-teal-600 dark:text-teal-400">
+                                {formatCurrency(Number(item.price), currency)}
+                              </span>
+                              <button
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="p-1 text-slate-400 hover:text-rose-500 rounded cursor-pointer transition-colors"
+                                title="Delete item"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Who shared this item? */}
+                          <div className="flex items-center flex-wrap gap-1.5 pt-1">
+                            <span className="text-[11px] text-slate-400 font-medium">Shared by:</span>
+                            {friends.map((f) => {
+                              const isShared = (item.sharedBy || []).includes(f.id);
+                              return (
+                                <button
+                                  key={f.id}
+                                  type="button"
+                                  onClick={() => handleToggleItemConsumer(item.id, f.id)}
+                                  className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${
+                                    isShared
+                                      ? "bg-teal-500 text-white border-teal-500 shadow-xs"
+                                      : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-700"
+                                  }`}
+                                >
+                                  {f.name}
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
-
-                        {/* Who shared this item? */}
-                        <div className="flex items-center flex-wrap gap-1.5 pt-1">
-                          <span className="text-[11px] text-slate-400 font-medium">Shared by:</span>
-                          {friends.map((f) => {
-                            const isShared = (item.sharedBy || []).includes(f.id);
-                            return (
-                              <button
-                                key={f.id}
-                                type="button"
-                                onClick={() => handleToggleItemConsumer(item.id, f.id)}
-                                className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${
-                                  isShared
-                                    ? "bg-teal-500 text-white border-teal-500 shadow-xs"
-                                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-700"
-                                }`}
-                              >
-                                {f.name}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1144,7 +1297,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Group Members (Friends, Names & Stepper) */}
+              {/* Group Members (Friends, Names & Stepper & Direct Add/Remove) */}
               <div className="bg-white dark:bg-[#141124] rounded-2xl p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800/90 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-4">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -1174,28 +1327,64 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Quick Group Presets */}
-                <div className="flex items-center flex-wrap gap-2 mb-4">
-                  <span className="text-xs text-slate-400 font-medium">Quick sizes:</span>
-                  {[1, 2, 3, 4, 5, 6, 8, 10].map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => handleSetPeopleCount(size)}
-                      className={`px-3 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
-                        friends.length === size
-                          ? "bg-teal-500 text-white border-teal-500 shadow-xs"
-                          : "bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300"
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
+                {/* Quick Group Presets & Add Friend Toggle */}
+                <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+                  <div className="flex items-center flex-wrap gap-1.5">
+                    <span className="text-xs text-slate-400 font-medium">Quick sizes:</span>
+                    {[1, 2, 3, 4, 5, 6, 8, 10].map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => handleSetPeopleCount(size)}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                          friends.length === size
+                            ? "bg-teal-500 text-white border-teal-500 shadow-xs"
+                            : "bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddFriendInput(!showAddFriendInput);
+                      setTimeout(() => {
+                        if (newFriendInputRef.current) newFriendInputRef.current.focus();
+                      }, 50);
+                    }}
+                    className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    {showAddFriendInput ? "Cancel" : "+ Add Person"}
+                  </button>
                 </div>
 
-                {/* Friend Avatar Badges (Editable Names!) */}
+                {/* Inline Add Friend Form */}
+                {showAddFriendInput && (
+                  <form onSubmit={handleAddCustomFriend} className="flex gap-2 mb-4 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                    <input
+                      ref={newFriendInputRef}
+                      type="text"
+                      placeholder="Enter friend's name (e.g. Maya)"
+                      value={newFriendName}
+                      onChange={(e) => setNewFriendName(e.target.value)}
+                      className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <button
+                      type="submit"
+                      className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 cursor-pointer"
+                    >
+                      Add
+                    </button>
+                  </form>
+                )}
+
+                {/* Friend Avatar Badges (Editable Names & Individual Remove!) */}
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800/60">
                   <span className="text-xs text-slate-400 font-medium block mb-2.5">
-                    Tap name to rename or click checkmark to toggle paid:
+                    Tap name to rename, checkmark to toggle paid, or (×) to remove:
                   </span>
                   <div className="flex flex-wrap gap-2">
                     {friends.map((friend) => {
@@ -1203,7 +1392,7 @@ export default function App() {
                       return (
                         <div
                           key={friend.id}
-                          className={`flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full border text-xs font-semibold transition-all ${
+                          className={`flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full border text-xs font-semibold transition-all ${
                             friend.paid
                               ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
                               : "bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
@@ -1237,6 +1426,7 @@ export default function App() {
                             </span>
                           )}
 
+                          {/* Paid/Pending Toggle */}
                           <button
                             type="button"
                             onClick={() => toggleFriendPaid(friend.id)}
@@ -1249,6 +1439,18 @@ export default function App() {
                               <span className="w-2 h-2 rounded-full bg-amber-400 block" />
                             )}
                           </button>
+
+                          {/* Individual Remove Friend Button */}
+                          {friends.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={(e) => handleRemoveFriend(friend.id, e)}
+                              className="p-0.5 hover:text-rose-500 rounded-full transition-colors cursor-pointer text-slate-400 ml-0.5"
+                              title={`Remove ${friend.name}`}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       );
                     })}
@@ -1292,7 +1494,9 @@ export default function App() {
                 <div className="bg-gradient-to-r from-indigo-600 to-teal-500 p-4 text-white flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Receipt className="w-5 h-5 text-indigo-200" />
-                    <span className="font-extrabold tracking-tight text-sm uppercase">QuickSplit Receipt</span>
+                    <span className="font-extrabold tracking-tight text-sm uppercase">
+                      {splitMode === "itemized" ? "Itemized Check" : "QuickSplit Receipt"}
+                    </span>
                   </div>
                   <span className="text-xs font-mono bg-white/20 px-2 py-0.5 rounded-full font-medium">
                     {new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" })}
@@ -1300,21 +1504,23 @@ export default function App() {
                 </div>
 
                 <div className="p-5 sm:p-6 space-y-5">
-                  {/* Hero Per-Person Highlight Card */}
+                  {/* Hero Highlight Card */}
                   <div className="bg-gradient-to-br from-indigo-50/80 via-indigo-50/40 to-teal-50/60 dark:from-indigo-950/40 dark:via-indigo-950/20 dark:to-teal-950/30 border border-indigo-200/80 dark:border-indigo-800/60 rounded-2xl p-5 text-center shadow-inner relative overflow-hidden">
                     <span className="text-[11px] font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 block mb-1">
-                      Each Person Pays
+                      {splitMode === "itemized" ? "Total Check (With Tip)" : "Each Person Pays"}
                     </span>
                     <div className="text-4xl sm:text-5xl font-black font-sans tracking-tight text-slate-900 dark:text-white animate-pop">
-                      {formatCurrency(activeSplit.perPerson, currency)}
+                      {splitMode === "itemized" ? formatCurrency(activeSplit.total, currency) : formatCurrency(activeSplit.perPerson, currency)}
                     </div>
                     <span className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2 block">
-                      {activeSplit.isRounded ? (
+                      {splitMode === "itemized" ? (
+                        `${items.length} items shared between ${friends.length} friends`
+                      ) : activeSplit.isRounded ? (
                         <span className="text-amber-600 dark:text-amber-400 font-semibold flex items-center justify-center gap-1">
                           <Sparkles className="w-3.5 h-3.5" /> Rounded up (+{formatCurrency(activeSplit.roundingDifference || 0, currency)} tip bonus)
                         </span>
                       ) : (
-                        `Split between ${friends.length} ${friends.length === 1 ? "person" : "people"}`
+                        `Split evenly between ${friends.length} ${friends.length === 1 ? "person" : "people"}`
                       )}
                     </span>
                   </div>
@@ -1347,7 +1553,7 @@ export default function App() {
                   {/* Friend Payment Tracker Summary */}
                   <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80">
                     <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
-                      <span>Individual shares:</span>
+                      <span>{splitMode === "itemized" ? "Individual Shares:" : "Group Members:"}</span>
                       <span>
                         {friends.filter((f) => f.paid).length} of {friends.length} paid
                       </span>
@@ -1372,11 +1578,11 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Primary Actions: Copy, Share, Print, Reset */}
-                  <div className="pt-2 grid grid-cols-4 gap-2 no-print">
+                  {/* Primary Actions: Copy, Share, Print, Save, Reset */}
+                  <div className="pt-2 grid grid-cols-5 gap-1.5 no-print">
                     <button
                       onClick={handleCopySummary}
-                      className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 rounded-xl font-bold text-xs bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
+                      className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl font-bold text-[11px] bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
                       title="Copy receipt summary to clipboard"
                     >
                       <Copy className="w-4 h-4" />
@@ -1385,7 +1591,7 @@ export default function App() {
 
                     <button
                       onClick={handleShare}
-                      className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 rounded-xl font-bold text-xs bg-teal-500 hover:bg-teal-600 active:scale-95 text-white shadow-md shadow-teal-500/25 transition-all cursor-pointer"
+                      className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl font-bold text-[11px] bg-teal-500 hover:bg-teal-600 active:scale-95 text-white shadow-md shadow-teal-500/25 transition-all cursor-pointer"
                       title="Share to WhatsApp, Messages, etc."
                     >
                       <Share2 className="w-4 h-4" />
@@ -1393,8 +1599,17 @@ export default function App() {
                     </button>
 
                     <button
+                      onClick={() => saveToHistory(false)}
+                      className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl font-bold text-[11px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                      title="Save this calculation to local history"
+                    >
+                      <BookmarkPlus className="w-4 h-4 text-indigo-500" />
+                      <span>Save</span>
+                    </button>
+
+                    <button
                       onClick={handlePrintReceipt}
-                      className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                      className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl font-bold text-[11px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
                       title="Print or save as PDF receipt"
                     >
                       <Printer className="w-4 h-4" />
@@ -1403,7 +1618,7 @@ export default function App() {
 
                     <button
                       onClick={handleReset}
-                      className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                      className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl font-bold text-[11px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
                       title="Reset calculator"
                     >
                       <RotateCcw className="w-4 h-4" />
@@ -1411,16 +1626,14 @@ export default function App() {
                     </button>
                   </div>
 
-                  {/* UPI QR Trigger (when currency is INR) */}
-                  {currency === "INR" && (
-                    <button
-                      onClick={() => setShowQRModal(true)}
-                      className="w-full py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2 transition-colors border border-slate-200 dark:border-slate-700/60 cursor-pointer no-print"
-                    >
-                      <QrCode className="w-4 h-4 text-indigo-500" />
-                      <span>Generate Instant UPI Payment QR</span>
-                    </button>
-                  )}
+                  {/* UPI QR Trigger (Works offline!) */}
+                  <button
+                    onClick={() => setShowQRModal(true)}
+                    className="w-full py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2 transition-colors border border-slate-200 dark:border-slate-700/60 cursor-pointer no-print"
+                  >
+                    <QrCode className="w-4 h-4 text-indigo-500" />
+                    <span>Generate Instant UPI Payment QR Code</span>
+                  </button>
                 </div>
               </div>
 
@@ -1428,7 +1641,7 @@ export default function App() {
               <div className="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40 text-xs text-indigo-800 dark:text-indigo-300 flex items-start gap-2.5 no-print">
                 <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
                 <span>
-                  100% private. Calculations run entirely in your browser with zero analytics or tracking.
+                  100% private &amp; offline. All calculations and QR codes are generated directly in your browser with zero network tracking.
                 </span>
               </div>
             </div>
@@ -1447,7 +1660,7 @@ export default function App() {
               </span>
               <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">Recent Splits</h2>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                Calculations saved locally on this device for instant one-tap restoration.
+                Calculations saved in your browser's localStorage with one-click Restore or Delete.
               </p>
             </div>
             {history.length > 0 && (
@@ -1464,7 +1677,7 @@ export default function App() {
             <div className="text-center py-10 px-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40">
               <Calculator className="w-8 h-8 text-slate-400 mx-auto mb-2 opacity-50" />
               <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">No recent splits yet</p>
-              <p className="text-xs text-slate-400">Calculate a bill and tap "Copy" or "Share" to automatically save it here.</p>
+              <p className="text-xs text-slate-400">Calculate a bill and tap "Save", "Copy", or "Share" to store it here.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1487,12 +1700,18 @@ export default function App() {
                     </button>
                   </div>
                   <div className="text-xl font-extrabold font-mono text-indigo-600 dark:text-indigo-400">
-                    {formatCurrency(item.perPerson, item.currency)}
-                    <span className="text-xs font-normal text-slate-400 ml-1">/ person</span>
+                    {item.mode === "itemized" ? formatCurrency(item.total, item.currency) : formatCurrency(item.perPerson, item.currency)}
+                    <span className="text-xs font-normal text-slate-400 ml-1">
+                      {item.mode === "itemized" ? "total" : "/ person"}
+                    </span>
                   </div>
                   <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 space-y-0.5">
-                    <div>Total: {formatCurrency(item.total, item.currency)}</div>
+                    <div>Mode: <span className="font-semibold capitalize">{item.mode || "equal"}</span></div>
                     <div>{item.people} people · {item.tipPercent}% tip {item.isRounded ? "· Rounded" : ""}</div>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 group-hover:underline">
+                    <span>Click to Restore</span>
+                    <ArrowRight className="w-3 h-3" />
                   </div>
                 </div>
               ))}
@@ -1602,13 +1821,13 @@ export default function App() {
 
       </main>
 
-      {/* UPI QR Modal (India) */}
+      {/* 100% OFFLINE UPI QR Modal */}
       {showQRModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-print">
           <div className="bg-white dark:bg-[#141124] w-full max-w-sm rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xl relative text-center">
             <button
               onClick={() => setShowQRModal(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:white cursor-pointer"
+              className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -1617,7 +1836,7 @@ export default function App() {
             </div>
             <h3 className="font-extrabold text-lg">UPI Payment Request</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-              Enter your UPI ID so friends can scan and pay their share directly.
+              Generated 100% offline. Friends can scan with GPay, PhonePe, or Paytm to pay their share directly.
             </p>
 
             <div className="mb-4 text-left">
@@ -1631,16 +1850,22 @@ export default function App() {
               />
             </div>
 
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 inline-block shadow-sm mb-4">
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiPaymentUrl)}`}
-                alt="UPI QR Code"
-                className="w-44 h-44 mx-auto"
-              />
+            <div className="bg-white p-3 rounded-2xl border border-slate-200 inline-block shadow-sm mb-4">
+              {offlineQrDataUrl ? (
+                <img
+                  src={offlineQrDataUrl}
+                  alt="Offline UPI QR Code"
+                  className="w-44 h-44 mx-auto rounded-lg"
+                />
+              ) : (
+                <div className="w-44 h-44 flex items-center justify-center text-xs text-slate-400">
+                  Generating QR...
+                </div>
+              )}
             </div>
 
             <div className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mb-4">
-              Requesting {formatCurrency(activeSplit.perPerson, "INR")} / person
+              Requesting {formatCurrency(splitMode === "itemized" ? (activeSplit.total / friends.length) : activeSplit.perPerson, "INR")} / person
             </div>
 
             <button
