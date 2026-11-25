@@ -109,11 +109,11 @@ export default function GroupManager({
   };
 
   return (
-    <div className="bg-white dark:bg-[#141124] rounded-2xl p-5 sm:p-6 border border-slate-200/90 dark:border-white/5 shadow-sm hover:shadow-md transition-all">
+    <div className="bg-[#ffffff] dark:bg-[#15171c] rounded-xl p-5 border-2 border-[#1c1917] dark:border-[#2e323b] shadow-hard transition-all">
       <div className="flex items-center justify-between mb-4">
-        <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-          <Users className="w-3.5 h-3.5 text-teal-500" />
-          Split With ({friends.length} {friends.length === 1 ? "Person" : "People"})
+        <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#756f68] dark:text-[#a39cae] flex items-center gap-1.5">
+          <Users className="w-3.5 h-3.5 text-[#0d9488]" />
+          Split Group ({friends.length} {friends.length === 1 ? "Person" : "People"})
         </label>
         
         {/* Stepper Buttons */}
@@ -121,18 +121,18 @@ export default function GroupManager({
           <button
             disabled={friends.length <= 1}
             onClick={() => handleSetPeopleCount(friends.length - 1)}
-            className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-md bg-[#f5f2eb] hover:bg-[#ede7dc] dark:bg-[#1e2129] dark:hover:bg-[#282d38] disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center font-bold text-[#1c1917] dark:text-[#f5f2eb] border-2 border-[#1c1917] dark:border-[#2e323b] shadow-hard-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
             aria-label="Decrease group size"
           >
             <Minus className="w-4 h-4" />
           </button>
-          <span className="font-extrabold text-lg w-8 text-center font-mono select-none">
+          <span className="font-black text-lg w-8 text-center font-mono select-none text-[#e05332] dark:text-[#f97316]">
             {friends.length}
           </span>
           <button
             disabled={friends.length >= 20}
             onClick={() => handleSetPeopleCount(friends.length + 1)}
-            className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-md bg-[#f5f2eb] hover:bg-[#ede7dc] dark:bg-[#1e2129] dark:hover:bg-[#282d38] disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center font-bold text-[#1c1917] dark:text-[#f5f2eb] border-2 border-[#1c1917] dark:border-[#2e323b] shadow-hard-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
             aria-label="Increase group size"
           >
             <Plus className="w-4 h-4" />
@@ -143,15 +143,15 @@ export default function GroupManager({
       {/* Quick Group Presets & Add Friend Toggle */}
       <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
         <div className="flex items-center flex-wrap gap-1.5">
-          <span className="text-xs text-slate-400 font-medium">Quick sizes:</span>
+          <span className="text-xs font-mono text-[#756f68] font-medium">Sizes:</span>
           {[1, 2, 3, 4, 5, 6, 8, 10].map((size) => (
             <button
               key={size}
               onClick={() => handleSetPeopleCount(size)}
-              className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+              className={`px-2 py-0.5 text-xs font-mono font-bold rounded-md border-2 border-[#1c1917] dark:border-[#2e323b] transition-all cursor-pointer ${
                 friends.length === size
-                  ? "bg-teal-500 text-white border-teal-500 shadow-xs"
-                  : "bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300"
+                  ? "bg-[#e05332] text-white shadow-hard-sm"
+                  : "bg-[#f5f2eb] dark:bg-[#1e2129] hover:bg-[#ede7dc] dark:hover:bg-[#282d38] text-[#1c1917] dark:text-[#f5f2eb]"
               }`}
             >
               {size}
@@ -167,27 +167,27 @@ export default function GroupManager({
               if (addFriendInputRef.current) addFriendInputRef.current.focus();
             }, 50);
           }}
-          className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+          className="text-xs font-mono font-bold text-[#e05332] hover:underline flex items-center gap-1 cursor-pointer"
         >
           <UserPlus className="w-3.5 h-3.5" />
-          {showAddFriend ? "Cancel" : "+ Add Person"}
+          {showAddFriend ? "Cancel" : "+ Add Member"}
         </button>
       </div>
 
       {/* Inline Add Person Form */}
       {showAddFriend && (
-        <form onSubmit={handleAddCustomFriend} className="flex gap-2 mb-4 p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 animate-fade-in">
+        <form onSubmit={handleAddCustomFriend} className="flex gap-2 mb-4 p-2.5 rounded-xl bg-[#f5f2eb] dark:bg-white/5 border border-[#e3ded4] dark:border-white/10 animate-fade-in">
           <input
             ref={addFriendInputRef}
             type="text"
-            placeholder="Enter friend's name (e.g. Maya)"
+            placeholder="Friend name (e.g. Maya)"
             value={newFriendName}
             onChange={(e) => setNewFriendName(e.target.value)}
-            className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 px-3 py-1.5 text-xs font-mono rounded-lg border border-[#e3ded4] dark:border-white/10 bg-white dark:bg-[#181a20] focus:outline-none focus:border-[#e05332]"
           />
           <button
             type="submit"
-            className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold cursor-pointer transition-colors"
+            className="px-3.5 py-1.5 rounded-lg bg-[#e05332] hover:bg-[#c84324] text-white text-xs font-mono font-bold cursor-pointer transition-colors shadow-xs"
           >
             Add
           </button>
@@ -195,9 +195,9 @@ export default function GroupManager({
       )}
 
       {/* Friend Chips Grid */}
-      <div className="pt-2 border-t border-slate-100 dark:border-white/5">
-        <span className="text-xs text-slate-400 font-medium block mb-2.5">
-          Tap name to rename, checkmark to toggle paid, or (×) to remove:
+      <div className="pt-2 border-t border-[#e3ded4] dark:border-white/10">
+        <span className="text-[11px] font-mono text-[#756f68] block mb-2.5">
+          Tap name to edit, checkmark to toggle paid:
         </span>
         <div className="flex flex-wrap gap-2">
           {friends.map((friend) => {
@@ -205,10 +205,10 @@ export default function GroupManager({
             return (
               <div
                 key={friend.id}
-                className={`flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full border text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full border text-xs font-mono font-bold transition-all ${
                   friend.paid
-                    ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
-                    : "bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300"
+                    ? "bg-[#0d9488]/10 border-[#0d9488]/30 text-[#0d9488]"
+                    : "bg-[#f5f2eb] dark:bg-white/5 border-[#e3ded4] dark:border-white/10 text-[#1f1d1a] dark:text-[#f5f2eb]"
                 }`}
               >
                 <span
@@ -227,7 +227,7 @@ export default function GroupManager({
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleUpdateName(friend.id, e.target.value);
                     }}
-                    className="w-20 bg-white dark:bg-slate-900 px-1 py-0.5 rounded border border-indigo-400 text-xs focus:outline-none"
+                    className="w-20 bg-white dark:bg-[#181a20] px-1 py-0.5 rounded border border-[#e05332] text-xs focus:outline-none"
                   />
                 ) : (
                   <span
@@ -243,13 +243,13 @@ export default function GroupManager({
                 <button
                   type="button"
                   onClick={() => togglePaid(friend.id)}
-                  className="ml-1 p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors cursor-pointer"
+                  className="ml-1 p-0.5 hover:bg-[#e9e4d8] dark:hover:bg-white/10 rounded-full transition-colors cursor-pointer"
                   title={friend.paid ? "Mark pending" : "Mark paid"}
                 >
                   {friend.paid ? (
-                    <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                    <Check className="w-3 h-3 text-[#0d9488]" />
                   ) : (
-                    <span className="w-2 h-2 rounded-full bg-amber-400 block" />
+                    <span className="w-2 h-2 rounded-full bg-[#d97706] block" />
                   )}
                 </button>
 
@@ -258,7 +258,7 @@ export default function GroupManager({
                   <button
                     type="button"
                     onClick={(e) => handleRemoveFriend(friend.id, e)}
-                    className="p-0.5 hover:text-rose-500 rounded-full transition-colors cursor-pointer text-slate-400 ml-0.5"
+                    className="p-0.5 hover:text-rose-500 rounded-full transition-colors cursor-pointer text-[#756f68] ml-0.5"
                     title={`Remove ${friend.name}`}
                   >
                     <X className="w-3 h-3" />
@@ -271,14 +271,14 @@ export default function GroupManager({
       </div>
 
       {/* Round Up Toggle Switch */}
-      <div className="mt-5 pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
+      <div className="mt-5 pt-4 border-t border-[#e3ded4] dark:border-white/10 flex items-center justify-between">
         <div className="space-y-0.5">
-          <div className="flex items-center gap-1.5 font-bold text-sm text-slate-800 dark:text-slate-200">
-            <Sparkles className="w-4 h-4 text-amber-500" />
+          <div className="flex items-center gap-1.5 font-bold text-sm text-[#1f1d1a] dark:text-[#f5f2eb]">
+            <Sparkles className="w-4 h-4 text-[#d97706]" />
             Round up per person
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Rounds shares to whole currency; spare cents go to the tip bonus.
+          <p className="text-xs text-[#756f68] dark:text-[#a39cae]">
+            Rounds shares to whole currency; spare cents go to server tip bonus.
           </p>
         </div>
         <button
@@ -288,11 +288,11 @@ export default function GroupManager({
             setRoundUp(!roundUp);
           }}
           className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
-            roundUp ? "bg-indigo-600 justify-end" : "bg-slate-300 dark:bg-slate-700 justify-start"
+            roundUp ? "bg-[#e05332] justify-end" : "bg-[#dcd4c5] dark:bg-slate-700 justify-start"
           }`}
           aria-pressed={roundUp}
         >
-          <span className="w-4 h-4 rounded-full bg-white shadow-md transform transition-transform" />
+          <span className="w-4 h-4 rounded-full bg-white shadow-xs transform transition-transform" />
         </button>
       </div>
     </div>

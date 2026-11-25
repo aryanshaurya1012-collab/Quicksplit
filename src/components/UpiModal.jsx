@@ -15,11 +15,10 @@ export default function UpiModal({
 
   const upiPaymentUrl = useMemo(() => {
     const formattedAmount = (Number(amount) || 0).toFixed(2);
-    const note = encodeURIComponent("QuickSplit bill share");
+    const note = encodeURIComponent("QuickSplit Pro bill share");
     return `upi://pay?pa=${encodeURIComponent(upiId)}&pn=QuickSplit&am=${formattedAmount}&cu=INR&tn=${note}`;
   }, [upiId, amount]);
 
-  // Generate offline QR Code data URL whenever upiPaymentUrl or isOpen changes
   useEffect(() => {
     if (!isOpen) return;
     let isMounted = true;
@@ -27,7 +26,7 @@ export default function UpiModal({
       width: 220,
       margin: 2,
       color: {
-        dark: "#1e1b4b",
+        dark: "#1f1d1a",
         light: "#ffffff"
       }
     })
@@ -47,37 +46,37 @@ export default function UpiModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in no-print">
-      <div className="bg-white dark:bg-[#141124] w-full max-w-sm rounded-3xl p-6 border border-slate-200 dark:border-white/10 shadow-2xl relative text-center">
+      <div className="bg-[#ffffff] dark:bg-[#181a20] w-full max-w-sm rounded-2xl p-6 border border-[#e3ded4] dark:border-white/10 shadow-2xl relative text-center font-sans">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors"
+          className="absolute top-4 right-4 p-1.5 rounded-full bg-[#f5f2eb] dark:bg-white/5 text-[#756f68] hover:text-[#1f1d1a] dark:hover:text-white cursor-pointer transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
 
-        <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3 shadow-sm">
-          <QrCode className="w-6 h-6" />
+        <div className="w-10 h-10 rounded-xl bg-[#e05332]/10 text-[#e05332] flex items-center justify-center mx-auto mb-3 shadow-xs">
+          <QrCode className="w-5 h-5" />
         </div>
 
-        <h3 className="font-extrabold text-lg">UPI Payment Request</h3>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-          Generated 100% offline. Friends can scan with GPay, PhonePe, or Paytm to pay their share directly.
+        <h3 className="font-extrabold text-lg font-heading text-[#1f1d1a] dark:text-white">UPI Payment Request</h3>
+        <p className="text-xs font-mono text-[#756f68] dark:text-[#a39cae] mb-4">
+          Generated 100% offline. Scan with GPay, PhonePe, or Paytm to pay directly.
         </p>
 
-        <div className="mb-4 text-left">
-          <label className="text-[11px] font-bold uppercase text-slate-400 block mb-1">
-            Your VPA / UPI ID
+        <div className="mb-4 text-left font-mono">
+          <label className="text-[10px] font-bold uppercase text-[#756f68] block mb-1">
+            VPA / UPI ID
           </label>
           <input
             type="text"
             value={upiId}
             onChange={(e) => setUpiId(e.target.value)}
             placeholder="e.g. mobile@upi or name@okaxis"
-            className="w-full px-3 py-2 text-sm font-semibold rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#181428] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 text-xs font-bold rounded-lg border border-[#e3ded4] dark:border-white/10 bg-[#f5f2eb] dark:bg-[#0f1115] focus:outline-none focus:border-[#e05332]"
           />
         </div>
 
-        <div className="bg-white p-3 rounded-2xl border border-slate-200 inline-block shadow-sm mb-4">
+        <div className="bg-white p-3 rounded-xl border border-[#e3ded4] inline-block shadow-xs mb-4">
           {offlineQrDataUrl ? (
             <img
               src={offlineQrDataUrl}
@@ -85,13 +84,13 @@ export default function UpiModal({
               className="w-44 h-44 mx-auto rounded-lg"
             />
           ) : (
-            <div className="w-44 h-44 flex items-center justify-center text-xs text-slate-400">
-              Generating offline QR...
+            <div className="w-44 h-44 flex items-center justify-center text-xs font-mono text-[#756f68]">
+              Rendering offline QR...
             </div>
           )}
         </div>
 
-        <div className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mb-4">
+        <div className="text-xs font-mono font-bold text-[#1f1d1a] dark:text-[#f5f2eb] mb-4">
           Requesting {formatCurrency(Number(amount) || 0, "INR")} / person
         </div>
 
@@ -101,7 +100,7 @@ export default function UpiModal({
             navigator.clipboard.writeText(upiPaymentUrl);
             showToast("UPI payment link copied!");
           }}
-          className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs transition-all cursor-pointer shadow-md shadow-indigo-500/25"
+          className="w-full py-2.5 rounded-lg bg-[#e05332] hover:bg-[#c84324] active:scale-95 text-white font-mono font-bold text-xs transition-all cursor-pointer shadow-xs"
         >
           Copy UPI Deep Link
         </button>

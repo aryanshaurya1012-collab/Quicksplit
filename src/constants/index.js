@@ -26,22 +26,23 @@ export const QUICK_ADD_AMOUNTS = {
   AED: [20, 50, 100, 200]
 };
 
+// Craft Studio Palette: Terracotta, Forest Teal, Warm Ochre, Cobalt Ink
 export const DEFAULT_FRIENDS = [
-  { id: "p1", name: "You", color: "#6366f1", paid: true },
-  { id: "p2", name: "Aryan", color: "#ec4899", paid: false },
-  { id: "p3", name: "Rakesh", color: "#14b8a6", paid: false },
-  { id: "p4", name: "Priya", color: "#f59e0b", paid: false }
+  { id: "p1", name: "You", color: "#e05332", paid: true },
+  { id: "p2", name: "Aryan", color: "#0d9488", paid: false },
+  { id: "p3", name: "Rakesh", color: "#d97706", paid: false },
+  { id: "p4", name: "Priya", color: "#2563eb", paid: false }
 ];
 
 export const AVATAR_COLORS = [
-  "#6366f1", // Indigo
-  "#ec4899", // Pink
-  "#14b8a6", // Teal
-  "#f59e0b", // Amber
-  "#8b5cf6", // Purple
-  "#06b6d4", // Cyan
-  "#10b981", // Emerald
-  "#f97316", // Orange
-  "#3b82f6", // Blue
-  "#e11d48"  // Rose
+  "#e05332", // Terracotta
+  "#0d9488", // Forest Teal
+  "#d97706", // Amber Ochre
+  "#2563eb", // Cobalt Ink
+  "#059669", // Emerald Sage
+  "#c2410c", // Burnt Rust
+  "#4d7c0f", // Warm Olive
+  "#334155", // Slate Ink
+  "#b91c1c", // Brick Red
+  "#78350f"  // Warm Walnut
 ];

@@ -1,94 +1,114 @@
 # QuickSplit Pro 🧾⚡
 
-A modern, high-precision, fintech-grade expense suite and bill calculator designed for real-world scaling, team lunches, dining groups, travel splits, and shared household finances. Built with **React 19**, **Tailwind CSS v4**, and **Vite** — engineered with Swiss/Linear typography (**Plus Jakarta Sans**, **Inter**, and **JetBrains Mono**), client-side deep-link session sharing, multi-payer debt minimization, smart receipt parsing, and 100% offline security.
+A bespoke, high-precision financial expense suite and tactical bill calculator engineered for groups, team lunches, dining parties, road trips, and shared household tabs. Built with **React 19**, **Tailwind CSS v4**, and **Vite** — designed with an unmistakable **Industrial Craft & Neo-Brutalist** aesthetic (**Space Grotesk**, **Manrope**, and **Space Mono**), physical perforated thermal register tickets, client-side deep-link session sharing, multi-payer debt minimization, and 100% offline privacy.
 
 ---
 
-## 🎯 Architecture & Workspace Overview
+## 🎯 Architectural Arrangement & Workspace Design
 
-Unlike generic AI-generated landing pages with marketing fluff, **QuickSplit Pro** is structured directly as an authentic, high-utility web application organized into 4 cohesive operational views:
+Unlike generic AI-generated landing pages or standard card templates with soft purple gradients, **QuickSplit Pro** is designed like an authentic, high-utility financial operations terminal organized into a **3-Zone Tactical Workspace** across 4 dedicated views:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ QuickSplit PRO  [Dinner with Team]   [🧮 Calc] [⚖️ Settle] [📊 Analytics] [📁 Saved] │
+│ QUICKSPLIT PRO  [Dinner with Team]   [01 Calc] [02 Settle] [03 Audit] [04 Log]│
+├─────────────────────────────────────────────────────────────────────────────┤
+│ LIVE TICKER: [SUB: ₹2,400] | [TAX+TIP: +₹360] | [TOTAL: ₹2,760] | [CREW: 4] │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-1. **🧮 Calculator Workspace**:
-   - **Equal Split**: Instant calculation dividing subtotal, discounts, tax, tip, and round-up evenly.
-   - **Itemized Split**: Granular dish-by-dish order entry with multi-select consumer chips, prorated discounts, and proportional taxes.
-   - **Discounts & Promo Codes**: Prorates flat vouchers (e.g. $20 off) or percentage discounts (e.g. 15% Zomato Gold / Swiggy One) across all item shares.
-   - **Sales Tax / GST Engine**: Configurable tax rates (5% GST, 8.5% Sales Tax, 12%, 18%) applied to the discounted subtotal.
-   - **Smart Round-Up**: Rounds individual shares up to the nearest whole integer ($17.40 → $18.00); spare cents are automatically awarded to the server's tip bonus.
-   - **Live Merchant Receipt Card**: Photogenic, high-resolution digital check card with instant PNG image export (`html-to-image`), CSV spreadsheet download, print/PDF styling, and WhatsApp formatted text copy.
-
-2. **⚖️ Settlement Ledger ("Who Owes Whom")**:
-   - **Multi-Payer Upfront Contributions**: Accurately records who paid what upfront (e.g., Alice paid $150 on card, Bob paid $40 in cash, Charlie paid $0).
-   - **Net Balance Matrix**: Real-time auditing of who is a Creditor (`+$45.00` to receive) vs Debtor (`-$30.00` to pay).
-   - **Optimal Debt Minimization**: Executes a greedy transfer minimization algorithm to calculate the absolute fewest direct bank transfers required to balance everyone's tab.
-   - **1-Click WhatsApp / Slack Copy**: Formatted plain-text summary ready to paste directly into group chats.
-
-3. **📊 Financial Audit & Analytics**:
-   - **Executive KPI Cards**: Total check, per-person average, peak individual consumer, and tax/tip ratio.
-   - **Segmented Contribution Proportion Bar**: Interactive visual bar displaying each participant's share percentage of the total bill.
-   - **Complete Audit Spreadsheet**: Itemized breakdown table showing Base Share, Discount, Tax, Tip, Total Share, and % of Check.
-
-4. **📁 Local Archives & Saved Bills**:
-   - Private browser-persisted ledger in `localStorage`.
-   - Search by session title or category (`Dining`, `Travel`, `Groceries`, `Office`, `Event`).
-   - 1-click **Restore to Workspace** and batch CSV export.
-
-5. **🔗 Deep-Link State Sharing (`#share=...`)**:
-   - Instant 1-click "Share Link" encodes the entire session state (items, friends, bill, tip, tax, discount) into a compact base64 URL hash.
-   - Anyone opening the link on their mobile or desktop sees the exact calculated bill instantly — zero backend or login required.
-
-6. **📋 Smart Receipt Text Parser**:
-   - Paste raw bill text from SMS messages, Swiggy, Zomato, Uber Eats, or paper check transcriptions.
-   - Automatically extracts dish names, quantities (e.g. `2x IPA Beer`), and prices into the itemized split.
+### 1. 🧮 3-Zone Tactical Split Console (Calculator View)
+- **Zone 1: Financial Terminal (Inputs & Rates)**:
+  - Big numeric register with mechanical denomination keys (`+50`, `+100`, `+500`, `+1000`).
+  - Tactile operational mode toggle: `= Equal Split` vs `÷ Itemized Check`.
+  - Expandable Discounts & Tax/GST accordion with flat and percentage vouchers.
+  - Stepped Gratuity Rate gauge with micro-notes (0% to 25% presets + custom tip).
+- **Zone 2: Crew & Distribution Ledger**:
+  - Interactive group roster with inline member renaming, paid/due toggles, and avatar color stamps.
+  - Granular dish-by-dish order entry with multi-select consumer chips in itemized mode.
+  - **Smart Round-Up**: Rounds individual shares up to the nearest whole integer ($17.40 → $18.00); spare cents are automatically awarded to the server's tip bonus.
+- **Zone 3: Perforated Thermal Register Check (Anchor Slip)**:
+  - Physical thermal check slip with authentic dot-matrix register markings (`REG #04`, `TIME`, `TABLE 07`).
+  - **Geometric jagged tear-off bottom edge (`receipt-tear-bottom`)** and stylized barcode graphic.
+  - Monospace accounting breakdown with dot leaders and member share status.
+  - **Action Deck**: 1-click **Copy for WhatsApp** (with celebratory confetti), **Share Web Link**, **Download Slip (PNG Image)**, **CSV Sheet Export**, **Print / Save as PDF**, and **UPI Instant QR Code Generator**.
 
 ---
 
-## 📁 Project Structure
+### 2. ⚖️ Debt Minimization Ledger ("Who Owes Whom")
+- **Multi-Payer Contributions**: Accurately records who paid what upfront on card or cash.
+- **Net Balance Audit**: Real-time auditing of Creditors (`+$45.00` to receive) vs Debtors (`-$30.00` to pay).
+- **Greedy Debt Minimization Algorithm**: Calculates the absolute minimum number of peer-to-peer bank transfers needed to square everyone up.
+- **1-Click Chat Plan Copy**: Formatted plain-text summary ready to paste directly into group WhatsApp or Slack channels.
+
+---
+
+### 3. 📊 Financial Audit & Analytics
+- **Executive KPI Cards**: Total check, average per head, peak consumer, and tax/tip ratio.
+- **Segmented Contribution Proportion Bar**: Interactive visual bar displaying each participant's share percentage of the total bill.
+- **Audited Ledger Table**: Complete spreadsheet breakdown showing Base Share, Discount, Tax, Tip, Total Share, and % of Check.
+
+---
+
+### 4. 📁 Local Archives & Saved Bills
+- 100% private browser-persisted ledger stored in `localStorage`.
+- Search saved splits by session title or category (`Dining`, `Travel`, `Groceries`, `Office`, `Event`).
+- 1-click **Restore to Workspace** and batch CSV spreadsheet download.
+
+---
+
+### 5. 🔗 Zero-Backend Deep-Link State Sharing (`#share=...`)
+- Encodes the complete session state (dishes, friends, bill, tip, tax, discount) into a compact base64 URL hash.
+- Anyone opening the link on their phone or desktop sees the exact calculated bill instantly — zero database, zero server tracking, zero login required.
+
+---
+
+### 6. 📋 Smart Receipt Text Parser
+- Paste raw bill text from SMS messages, Swiggy, Zomato, Uber Eats, or paper check transcriptions.
+- Automatically extracts dish names, quantities (e.g. `2x IPA Beer`), and prices directly into the itemized split.
+
+---
+
+## 📁 Repository Structure
 
 ```
 Quicksplit/
-├── index.html                  # Root HTML entry point (Plus Jakarta Sans, Inter & Manifest)
+├── index.html                  # Root HTML entry point (Space Grotesk, Manrope, Space Mono)
 ├── package.json                # Dependencies, test runners & benchmark scripts
-├── vite.config.js              # Vite and Tailwind CSS configuration
-├── assets/                     # App assets, icons, manifest, and dining presets
-│   ├── favicon.svg             # Vector brand mark
+├── vite.config.js              # Vite and Tailwind CSS v4 configuration
+├── assets/                     # Vector brand marks, icons, manifest, and dining presets
+│   ├── favicon.svg             # Terracotta division badge
 │   ├── icon-192.svg            # 192px PWA maskable icon
 │   ├── icon-512.svg            # 512px PWA maskable icon
 │   ├── site.webmanifest        # Progressive Web App manifest
-│   └── sample-receipts.json    # Preset dining scenarios (Pizza, Sushi, Brunch)
+│   └── sample-receipts.json    # 5 rich dining & travel presets (Pizza, Sushi, Brunch, Roadtrip, Coffee)
 ├── css/                        # Standalone CSS stylesheet
 │   └── styles.css              # Custom styling, print styles, and modal components
 ├── js/                         # Standalone modular JavaScript library
 │   ├── app.js                  # Standalone application conductor
 │   ├── calculator.js           # Pure math engine, debt minimizer & parser
-│   └── storage.js              # Persistence layer
+│   └── storage.js              # LocalStorage persistence layer
 ├── scripts/                    # Automated testing and benchmark scripts
-│   ├── verify-math.js          # 29-assertion mathematical test suite
+│   ├── verify-math.js          # 29-assertion mathematical verification suite
 │   └── benchmark.js            # High-throughput performance benchmark (>50,000 ops/sec)
 ├── src/                        # Modern React 19 Application
 │   ├── components/             # Modular UI components
-│   │   ├── Navbar.jsx              # Linear-style application header with segmented tabs
-│   │   ├── SessionHeader.jsx       # Event title editor, category tag & live KPI chips
-│   │   ├── EqualSplitForm.jsx      # Bill subtotal input & quick-add chips
+│   │   ├── Navbar.jsx              # Industrial masthead with segmented dock and status indicators
+│   │   ├── SessionHeader.jsx       # Event title editor, category dropdown & live audit chips
+│   │   ├── EqualSplitForm.jsx      # Numeric terminal display & mechanical quick-add chips
 │   │   ├── ItemizedSplitForm.jsx   # Dishes/drinks order entry & per-item friend tags
 │   │   ├── TaxAndDiscount.jsx      # Discounts, vouchers and Sales Tax / GST selector
-│   │   ├── TipSelector.jsx         # Tip presets with musical pentatonic chimes & custom tip
-│   │   ├── GroupManager.jsx        # Add person, remove (×), inline rename, paid toggles
-│   │   ├── ReceiptCard.jsx         # Digital check card, line items, PNG/CSV exporters
-│   │   ├── SettlementLedgerView.jsx# Dedicated "Who Owes Whom" balance matrix & debt minimizer
-│   │   ├── AnalyticsView.jsx       # Expense analytics, segmented bar & audit spreadsheet
+│   │   ├── TipSelector.jsx         # Stepped gratuity gauge & custom tip input
+│   │   ├── GroupManager.jsx        # Member stepper, inline rename, paid stamps & round-up switch
+│   │   ├── ReceiptCard.jsx         # Thermal paper ticket with jagged tear edge, barcode & action deck
+│   │   ├── SettlementLedgerView.jsx# "Who Owes Whom" balance matrix & debt minimizer
+│   │   ├── AnalyticsView.jsx       # Financial audit analytics, segmented bar & audit spreadsheet
 │   │   ├── HistoryView.jsx         # Local archives ledger with search & 1-click restore
 │   │   ├── SettlementModal.jsx     # Quick settlement dialog
 │   │   ├── SmartPasteModal.jsx     # Smart receipt bill text parser modal
 │   │   ├── SampleReceiptsModal.jsx # Preset dining scenarios loader modal
 │   │   ├── HelpModal.jsx           # Keyboard shortcuts, math rules & documentation modal
 │   │   ├── UpiModal.jsx            # 100% offline QR generator with UPI deep links
-│   │   ├── Footer.jsx              # Shortcuts pill & copyright footer
+│   │   ├── Footer.jsx              # Shortcuts pill & offline privacy notice
 │   │   └── BackToTop.jsx           # Floating scroll-to-top button
 │   ├── hooks/                  # Custom React hooks
 │   │   ├── useAudioHaptics.js      # Musical synthesizer chimes & click haptics
@@ -98,70 +118,52 @@ Quicksplit/
 │   │   ├── math.js                 # Equal and itemized mathematical split engine
 │   │   ├── settlement.js           # Multi-payer debt minimization algorithm
 │   │   ├── parser.js               # Smart receipt bill text parser
-│   │   ├── csv.js                  # CSV spreadsheet export generator
-│   │   ├── receipt.js              # Formatted receipt string generator
-│   │   └── shareLink.js            # Deep-link session URL encoder / decoder
-│   ├── constants/              # Static currency configurations & color palettes
-│   ├── App.jsx                 # Declarative application orchestrator
-│   ├── index.css               # Tailwind CSS styles, animations, and print stylesheet
-│   └── main.jsx                # React root mounting point
-└── README.md                   # Complete documentation
+│   │   ├── receipt.js              # Monospace ASCII receipt summary builder
+│   │   ├── csv.js                  # Spreadsheet exporter
+│   │   └── shareLink.js            # URL hash session encoder/decoder
+│   ├── constants/              # Application constants, currencies & presets
+│   │   └── index.js                # Currencies, presets, and Craft Studio color palette
+│   ├── index.css               # Tailwind CSS v4, hard shadows & thermal tear clip-path
+│   ├── main.jsx                # React DOM root mounting
+│   └── App.jsx                 # Master application conductor & 3-zone workspace
 ```
 
 ---
 
-## 🚀 Getting Started
+## ⌨️ Keyboard Shortcuts
 
-### 1. Install Dependencies
-```bash
-npm install
-```
+| Key | Action |
+|:---:|:---|
+| `1` | Switch to **Calculator** view |
+| `2` | Switch to **Settlements** view |
+| `3` | Switch to **Analytics** view |
+| `4` | Switch to **Saved Bills** view |
+| `M` | Toggle split mode (`Equal` ⇄ `Itemized`) |
+| `T` | Toggle Dark / Light theme |
+| `C` | Instant Copy formatted receipt summary (with confetti) |
+| `S` | Save current calculation to local archive |
+| `R` | Reset / zero current bill |
+| `?` | Open Help & Keyboard Shortcuts guide |
 
-### 2. Start Vite Development Server
-```bash
-npm run dev
-```
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+---
 
-### 3. Run Automated Mathematical Unit Tests
+## 🧪 Mathematical Verification & Benchmarks
+
+Run the automated test suite and high-throughput benchmark:
+
 ```bash
+# Run mathematical verification suite (29 tests)
 npm test
-```
-Executes all 29 mathematical test suites covering equal split, ceiling round-up, discounts, taxes, consumer itemized assignment, debt settlement minimization, and receipt parsing.
 
-### 4. Run Performance Benchmark
-```bash
+# Run sub-millisecond calculation benchmark
 npm run benchmark
-```
-Benchmarks 10,000 calculation runs for split math, itemized breakdowns, debt minimization, and text parsing to verify sub-millisecond execution (>50,000 operations/sec).
 
-### 5. Build for Production
-```bash
+# Build production bundle
 npm run build
 ```
 
 ---
 
-## ⌨️ Power-User Keyboard Shortcuts
+## 🔒 Privacy & Offline Guarantee
 
-- `[1]` : Switch to **Calculator** view
-- `[2]` : Switch to **Settlement Ledger** view
-- `[3]` : Switch to **Analytics & Audit** view
-- `[4]` : Switch to **Saved Bills** view
-- `[M]` : Toggle between **Equal** and **Itemized** split modes
-- `[C]` : Copy formatted receipt summary to clipboard
-- `[S]` : Save current bill calculation to local history
-- `[T]` : Toggle Dark / Light theme
-- `[R]` : Reset active form to default values
-
----
-
-## 🔒 100% Private & Offline Ready
-
-QuickSplit Pro executes entirely inside your browser runtime. All preferences (theme, currency, calculation history, audio setting), deep-link URL state compression, and UPI QR codes are computed strictly on your device. No analytics, no third-party trackers, and no server communication.
-
----
-
-## 📄 License
-
-Open source under the [MIT License](https://opensource.org/licenses/MIT).
+QuickSplit Pro executes **100% on your device**. All math computations, receipt image exports, QR codes, and session deep-links are processed entirely in client-side memory. Zero bill amounts, names, or payment details ever leave your browser.

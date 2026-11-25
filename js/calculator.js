@@ -366,7 +366,7 @@
 
   function buildSplitSummary(split, currencyCode) {
     var lines = [
-      "🧾 QuickSplit — Bill Summary",
+      "🧾 QuickSplit Pro — Bill Summary",
       "────────────────────────────",
       "Bill Subtotal:      " + formatCurrency(split.bill || split.subtotal, currencyCode)
     ];
@@ -398,7 +398,7 @@
 
     lines.push(
       "────────────────────────────",
-      "Calculated with QuickSplit ✨"
+      "Calculated with QuickSplit Pro ✨"
     );
 
     return lines.join("\n");

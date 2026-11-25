@@ -1,11 +1,11 @@
 {
-  "name": "QuickSplit — Bill & Tip Calculator",
+  "name": "QuickSplit Pro — Group Expense & Bill Suite",
   "short_name": "QuickSplit",
-  "description": "Modern, fair, and private bill and tip calculator for groups.",
+  "description": "High-precision, editorial bill and tip expense suite for groups and teams.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0b0914",
-  "theme_color": "#4f46e5",
+  "background_color": "#0f1115",
+  "theme_color": "#e05332",
   "icons": [
     {
       "src": "/assets/icon-192.svg",

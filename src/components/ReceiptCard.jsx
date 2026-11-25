@@ -14,7 +14,9 @@ import {
   FileSpreadsheet,
   Handshake,
   Link,
-  Tag
+  Tag,
+  CheckCircle2,
+  Clock
 } from "lucide-react";
 import { formatCurrency, formatTip } from "../utils/currency.js";
 import SplitVisualizer from "./SplitVisualizer.jsx";
@@ -57,7 +59,7 @@ export default function ReceiptCard({
     try {
       const dataUrl = await htmlToImage.toPng(receiptCardRef.current, {
         pixelRatio: 2,
-        backgroundColor: document.documentElement.classList.contains("dark") ? "#141124" : "#ffffff"
+        backgroundColor: document.documentElement.classList.contains("dark") ? "#0f1115" : "#f5f2eb"
       });
 
       const link = document.createElement("a");
@@ -72,235 +74,264 @@ export default function ReceiptCard({
     }
   };
 
+  const allPaid = friends.every((f) => f.paid);
+  const paidCount = friends.filter((f) => f.paid).length;
+
   return (
     <div className="sticky top-20 space-y-4 receipt-card">
-      {/* Capturable Receipt Card */}
+      {/* Capturable Authentic Thermal Receipt Ticket */}
       <div
         ref={receiptCardRef}
-        className="bg-white dark:bg-[#141124] rounded-3xl border border-slate-200/90 dark:border-white/10 shadow-xl overflow-hidden relative backdrop-blur-xl"
+        className="bg-[#fffdf9] dark:bg-[#15171c] rounded-t-xl border-t-2 border-x-2 border-[#1c1917] dark:border-[#2e323b] shadow-hard relative font-mono text-[#1c1917] dark:text-[#f5f2eb] overflow-hidden receipt-tear-bottom pb-8"
       >
-        {/* Receipt Header Ribbon */}
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-teal-500 p-4 text-white flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-indigo-100" />
-            <span className="font-extrabold tracking-tight text-sm uppercase">
-              {isItemized ? "Itemized Check" : "QuickSplit Receipt"}
+        {/* Ticket Header & Register Metadata */}
+        <div className="p-5 pb-3 text-center border-b border-dashed border-[#dcd4c5] dark:border-white/10">
+          <div className="flex items-center justify-between text-[10px] text-[#756f68] dark:text-[#a39cae] uppercase tracking-wider mb-2">
+            <span>REG #04</span>
+            <span className="flex items-center gap-1">
+              <Clock className="w-2.5 h-2.5" />
+              {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
+            <span>TABLE 07</span>
           </div>
-          <span className="text-xs font-mono bg-white/20 px-2.5 py-0.5 rounded-full font-medium">
-            {new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-          </span>
+
+          <div className="inline-block px-3 py-1 bg-[#1f1d1a] text-white dark:bg-[#f5f2eb] dark:text-[#0f1115] text-xs font-black uppercase tracking-widest rounded-sm mb-1">
+            QUICKSPLIT CHECKOUT
+          </div>
+          <div className="text-[10px] text-[#756f68] dark:text-[#a39cae] tracking-tight">
+            HIGH-PRECISION BILL SPLIT VOUCHER
+          </div>
         </div>
 
-        <div className="p-5 sm:p-6 space-y-5">
-          {/* Hero Callout Card */}
-          <div className="bg-gradient-to-br from-indigo-50/90 via-indigo-50/40 to-teal-50/60 dark:from-indigo-950/40 dark:via-indigo-950/20 dark:to-teal-950/30 border border-indigo-200/80 dark:border-indigo-800/60 rounded-2xl p-5 text-center shadow-inner relative overflow-hidden">
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 block mb-1">
-              {isItemized ? "Total Check (With Tax & Tip)" : "Each Person Pays"}
+        <div className="p-5 space-y-5">
+          {/* Main Key Figures Callout */}
+          <div className="bg-[#f5f2eb] dark:bg-[#0f1115] border border-[#e3ded4] dark:border-white/5 rounded-xl p-4 text-center">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#756f68] dark:text-[#a39cae] block mb-1">
+              {isItemized ? "Total Check" : "Amount Each Pays"}
             </span>
-            <div className="text-4xl sm:text-5xl font-black font-sans tracking-tight text-slate-900 dark:text-white animate-pop">
-              {isItemized
-                ? formatCurrency(activeSplit.total, currency)
-                : formatCurrency(activeSplit.perPerson, currency)}
+            <div className="text-3xl sm:text-4xl font-black font-mono text-[#e05332] dark:text-[#f97316] tracking-tight">
+              {formatCurrency(isItemized ? itemizedSplit.total : activeSplit.perPerson, currency)}
             </div>
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2 block">
+            <div className="text-[11px] font-medium text-[#756f68] dark:text-[#a39cae] mt-1">
               {isItemized ? (
-                `${items.length} items shared between ${friends.length} friends`
-              ) : activeSplit.isRounded ? (
-                <span className="text-amber-600 dark:text-amber-400 font-semibold flex items-center justify-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5" /> Rounded up (+{formatCurrency(activeSplit.roundingDifference || 0, currency)} tip bonus)
-                </span>
+                <span>Includes prorated discounts, tax &amp; tip</span>
               ) : (
-                `Split evenly between ${friends.length} ${friends.length === 1 ? "person" : "people"}`
+                <span>
+                  Split evenly between {friends.length} {friends.length === 1 ? "person" : "people"}
+                  {activeSplit.isRounded && (
+                    <span className="ml-1 text-[#d97706] font-bold">
+                      (Rounded up)
+                    </span>
+                  )}
+                </span>
               )}
-            </span>
+            </div>
           </div>
 
-          {/* Fintech Segmented Split Visualizer Bar */}
-          <SplitVisualizer
-            breakdown={breakdownList}
-            total={activeSplit.total}
-            currency={currency}
-          />
+          {/* Itemized Order Breakdown or Line Summary */}
+          {isItemized && items.length > 0 && (
+            <div className="space-y-2 border-b border-dashed border-[#dcd4c5] dark:border-white/10 pb-4">
+              <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-[#756f68]">
+                <span>ITEMS / DISHES</span>
+                <span>AMOUNT</span>
+              </div>
+              <div className="space-y-1.5 text-xs">
+                {items.map((item) => (
+                  <div key={item.id} className="flex justify-between items-start gap-2">
+                    <div className="truncate">
+                      <span className="font-bold">{item.name || "Untitled Item"}</span>
+                      <div className="text-[10px] text-[#756f68] flex gap-1">
+                        Shared by {item.sharedBy?.length || 0}
+                      </div>
+                    </div>
+                    <span className="font-bold whitespace-nowrap">
+                      {formatCurrency(parseFloat(item.price) || 0, currency)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-          {/* Line Items Breakdown */}
-          <div className="space-y-2 text-xs sm:text-sm pt-1 border-t border-slate-100 dark:border-white/5">
-            <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
-              <span>Subtotal</span>
-              <span className="font-mono font-semibold">{formatCurrency(activeSplit.bill, currency)}</span>
+          {/* Financial Calculation Breakdown Table */}
+          <div className="space-y-2 text-xs border-b border-dashed border-[#dcd4c5] dark:border-white/10 pb-4">
+            <div className="flex justify-between">
+              <span className="text-[#756f68] dark:text-[#a39cae]">Subtotal</span>
+              <span className="font-bold">{formatCurrency(activeSplit.bill, currency)}</span>
             </div>
 
-            {/* Discount line if present */}
             {activeSplit.discountAmount > 0 && (
-              <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-medium">
-                <span className="flex items-center gap-1">
-                  <Tag className="w-3 h-3" /> Discount ({activeSplit.discountType === "percent" ? `${activeSplit.discountVal}%` : "Flat"})
-                </span>
-                <span className="font-mono font-semibold">-{formatCurrency(activeSplit.discountAmount, currency)}</span>
+              <div className="flex justify-between text-[#0d9488]">
+                <span>Discount Voucher</span>
+                <span className="font-bold">-{formatCurrency(activeSplit.discountAmount, currency)}</span>
               </div>
             )}
 
-            {/* Tax line if present */}
             {activeSplit.taxAmount > 0 && (
-              <div className="flex justify-between items-center text-amber-600 dark:text-amber-400 font-medium">
-                <span>Tax ({activeSplit.taxPercent}%)</span>
-                <span className="font-mono font-semibold">+{formatCurrency(activeSplit.taxAmount, currency)}</span>
+              <div className="flex justify-between">
+                <span className="text-[#756f68] dark:text-[#a39cae]">Sales Tax / GST ({activeSplit.taxPercent}%)</span>
+                <span className="font-bold">+{formatCurrency(activeSplit.taxAmount, currency)}</span>
               </div>
             )}
 
-            {/* Tip line */}
-            <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
-              <span>Tip ({formatTip(activeSplit.tipPercent)})</span>
-              <span className="font-mono font-semibold">+{formatCurrency(activeSplit.tipAmount, currency)}</span>
+            <div className="flex justify-between">
+              <span className="text-[#756f68] dark:text-[#a39cae]">
+                Tip ({formatTip(activeSplit.tipPercent)})
+              </span>
+              <span className="font-bold">+{formatCurrency(activeSplit.tipAmount, currency)}</span>
             </div>
 
-            {/* Rounding bonus if present */}
             {activeSplit.isRounded && activeSplit.roundingDifference > 0 && (
-              <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-medium">
-                <span className="flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5" /> Rounding Extra
-                </span>
-                <span className="font-mono font-semibold">+{formatCurrency(activeSplit.roundingDifference, currency)}</span>
+              <div className="flex justify-between text-[#d97706] text-[11px]">
+                <span>Round-Up Tip Bonus</span>
+                <span>+{formatCurrency(activeSplit.roundingDifference, currency)}</span>
               </div>
             )}
 
-            <div className="h-px bg-slate-200 dark:bg-white/10 border-dashed border-t my-2" />
-            <div className="flex justify-between items-center font-bold text-base text-slate-900 dark:text-white">
-              <span>Total Check</span>
-              <span className="font-mono text-lg">{formatCurrency(activeSplit.total, currency)}</span>
-            </div>
-          </div>
-
-          {/* Friend Payment Tracker Summary */}
-          <div className="pt-2 border-t border-slate-100 dark:border-white/5">
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
-              <span>{isItemized ? "Individual Shares:" : "Group Members:"}</span>
-              <span>
-                {friends.filter((f) => f.paid).length} of {friends.length} paid
+            <div className="flex justify-between pt-2 border-t border-[#e3ded4] dark:border-white/10 text-sm font-black">
+              <span>TOTAL CHECK</span>
+              <span className="text-[#e05332] dark:text-[#f97316]">
+                {formatCurrency(activeSplit.total, currency)}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto pr-1">
-              {breakdownList.map((f) => (
-                <div
-                  key={f.id}
-                  onClick={() => toggleFriendPaid(f.id)}
-                  className={`flex items-center justify-between p-2 rounded-xl text-xs cursor-pointer border transition-all hover:scale-[1.01] ${
-                    f.paid
-                      ? "bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300"
-                      : "bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ backgroundColor: f.color }}
-                    />
-                    <span className="truncate max-w-[70px] font-medium">{f.name}</span>
+          </div>
+
+          {/* Group Members & Paid Status */}
+          <div className="space-y-2.5">
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-[#756f68]">
+              <span>MEMBER SHARES</span>
+              <span>
+                {paidCount} of {friends.length} PAID
+              </span>
+            </div>
+
+            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+              {breakdownList.map((friend) => {
+                const fData = friends.find((f) => f.id === friend.id) || friend;
+                return (
+                  <div
+                    key={friend.id}
+                    onClick={() => toggleFriendPaid(friend.id)}
+                    className={`flex items-center justify-between p-2 rounded-lg border text-xs cursor-pointer transition-all ${
+                      fData.paid
+                        ? "bg-[#0d9488]/10 border-[#0d9488]/30 text-[#0d9488]"
+                        : "bg-[#f5f2eb]/60 dark:bg-white/5 border-[#e3ded4] dark:border-white/10 hover:border-[#e05332]"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: fData.color }}
+                      />
+                      <span className="font-bold truncate">{friend.name}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold">
+                        {formatCurrency(friend.totalShare || 0, currency)}
+                      </span>
+                      <span
+                        className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded ${
+                          fData.paid
+                            ? "bg-[#0d9488] text-white"
+                            : "bg-[#756f68]/20 text-[#756f68]"
+                        }`}
+                      >
+                        {fData.paid ? "PAID" : "DUE"}
+                      </span>
+                    </div>
                   </div>
-                  <span className="font-bold font-mono">
-                    {formatCurrency(f.totalShare, currency)}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
-          {/* Primary Quick Action Buttons (5 Columns) */}
-          <div className="pt-2 grid grid-cols-5 gap-1.5 no-print">
-            <button
-              onClick={onCopy}
-              className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl font-bold text-[11px] bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
-              title="Copy receipt summary to clipboard (Shortcut: C)"
-            >
-              <Copy className="w-4 h-4" />
-              <span>Copy</span>
-            </button>
-
-            <button
-              onClick={onShare}
-              className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl font-bold text-[11px] bg-teal-500 hover:bg-teal-600 active:scale-95 text-white shadow-md shadow-teal-500/25 transition-all cursor-pointer"
-              title="Share to WhatsApp, Messages, etc."
-            >
-              <Share2 className="w-4 h-4" />
-              <span>Share</span>
-            </button>
-
-            <button
-              onClick={onSave}
-              className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl font-bold text-[11px] bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
-              title="Save this calculation to local history (Shortcut: S)"
-            >
-              <BookmarkPlus className="w-4 h-4 text-indigo-500" />
-              <span>Save</span>
-            </button>
-
-            <button
-              onClick={onPrint}
-              className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl font-bold text-[11px] bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
-              title="Print or save as PDF receipt"
-            >
-              <Printer className="w-4 h-4" />
-              <span>Print</span>
-            </button>
-
-            <button
-              onClick={onReset}
-              className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl font-bold text-[11px] bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
-              title="Reset calculator (Shortcut: R)"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>Reset</span>
-            </button>
+          {/* Authentic Stylized Barcode Graphic */}
+          <div className="pt-2 text-center border-t border-dashed border-[#dcd4c5] dark:border-white/10">
+            <div className="flex items-center justify-center gap-1 h-8 opacity-75">
+              {[2,4,1,3,2,5,1,4,2,3,1,5,3,2,4,1,3,2,4,1,5,2,3,1,4,2,3,1,5,2].map((w, i) => (
+                <div
+                  key={i}
+                  style={{ width: `${w * 1.5}px` }}
+                  className="h-full bg-[#1f1d1a] dark:bg-[#f5f2eb]"
+                />
+              ))}
+            </div>
+            <div className="text-[9px] font-mono tracking-widest text-[#756f68] mt-1 uppercase">
+              * QS-{Date.now().toString().slice(-6)} *
+            </div>
           </div>
-
-          {/* Secondary Pro Actions: Image Download, CSV Export, Who Owes Whom, Link */}
-          <div className="pt-1 grid grid-cols-3 gap-2 no-print">
-            <button
-              onClick={handleDownloadImage}
-              disabled={isExportingImage}
-              className="py-2 px-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/5 dark:hover:bg-white/10 text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-1.5 transition-all border border-slate-200 dark:border-white/10 cursor-pointer active:scale-95"
-              title="Download high-res receipt card as PNG image"
-            >
-              <Download className="w-3.5 h-3.5 text-purple-500" />
-              <span>PNG Image</span>
-            </button>
-
-            <button
-              onClick={onExportCSV}
-              className="py-2 px-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/5 dark:hover:bg-white/10 text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-1.5 transition-all border border-slate-200 dark:border-white/10 cursor-pointer active:scale-95"
-              title="Export complete breakdown to CSV spreadsheet"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
-              <span>CSV Sheet</span>
-            </button>
-
-            <button
-              onClick={onOpenSettlement}
-              className="py-2 px-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/5 dark:hover:bg-white/10 text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-1.5 transition-all border border-slate-200 dark:border-white/10 cursor-pointer active:scale-95"
-              title="Multi-payer debt minimizer (Who owes whom)"
-            >
-              <Handshake className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Settle Up</span>
-            </button>
-          </div>
-
-          {/* Offline UPI QR Code Button */}
-          <button
-            onClick={onOpenQR}
-            className="w-full py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/5 dark:hover:bg-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2 transition-all border border-slate-200 dark:border-white/10 cursor-pointer no-print active:scale-[0.99]"
-          >
-            <QrCode className="w-4 h-4 text-indigo-500" />
-            <span>Generate Instant UPI Payment QR Code</span>
-          </button>
         </div>
       </div>
 
-      {/* Offline Privacy Guarantee Pill */}
-      <div className="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40 text-xs text-indigo-800 dark:text-indigo-300 flex items-start gap-2.5 no-print shadow-xs">
-        <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
-        <span>
-          100% private &amp; offline. All math, QR codes, and image downloads run on your local device with zero server tracking.
-        </span>
+      {/* Tactile Action Buttons Deck */}
+      <div className="bg-[#ffffff] dark:bg-[#15171c] rounded-xl border-2 border-[#1c1917] dark:border-[#2e323b] p-3 shadow-hard space-y-2 no-print">
+        {/* Primary Action Row */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={onCopy}
+            className="py-2.5 px-3 rounded-lg bg-[#e05332] hover:bg-[#c84324] text-white text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-hard-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+          >
+            <Copy className="w-3.5 h-3.5" />
+            Copy Receipt
+          </button>
+          <button
+            onClick={onShare}
+            className="py-2.5 px-3 rounded-lg bg-[#ffffff] hover:bg-[#f5f2eb] dark:bg-[#1e2129] dark:hover:bg-white/10 text-[#1c1917] dark:text-[#f5f2eb] border-2 border-[#1c1917] dark:border-[#2e323b] text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-hard-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+          >
+            <Share2 className="w-3.5 h-3.5 text-[#e05332]" />
+            Share Web
+          </button>
+        </div>
+
+        {/* Secondary Action Row: PNG, CSV, Print */}
+        <div className="grid grid-cols-3 gap-1.5 pt-1">
+          <button
+            onClick={handleDownloadImage}
+            disabled={isExportingImage}
+            className="py-2 px-1 rounded-md bg-[#f5f2eb] hover:bg-[#ede7dc] dark:bg-[#1e2129] dark:hover:bg-white/10 text-[11px] font-mono font-bold text-[#1c1917] dark:text-[#f5f2eb] border-2 border-[#1c1917] dark:border-[#2e323b] transition-all cursor-pointer flex items-center justify-center gap-1 shadow-hard-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+            title="Download PNG image card"
+          >
+            <Download className="w-3 h-3 text-[#e05332]" />
+            PNG Image
+          </button>
+          <button
+            onClick={onExportCSV}
+            className="py-2 px-1 rounded-md bg-[#f5f2eb] hover:bg-[#ede7dc] dark:bg-[#1e2129] dark:hover:bg-white/10 text-[11px] font-mono font-bold text-[#1c1917] dark:text-[#f5f2eb] border-2 border-[#1c1917] dark:border-[#2e323b] transition-all cursor-pointer flex items-center justify-center gap-1 shadow-hard-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+            title="Export CSV spreadsheet"
+          >
+            <FileSpreadsheet className="w-3 h-3 text-[#0d9488]" />
+            CSV Sheet
+          </button>
+          <button
+            onClick={onPrint}
+            className="py-2 px-1 rounded-md bg-[#f5f2eb] hover:bg-[#ede7dc] dark:bg-[#1e2129] dark:hover:bg-white/10 text-[11px] font-mono font-bold text-[#1c1917] dark:text-[#f5f2eb] border-2 border-[#1c1917] dark:border-[#2e323b] transition-all cursor-pointer flex items-center justify-center gap-1 shadow-hard-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+            title="Print or save as PDF"
+          >
+            <Printer className="w-3 h-3 text-[#756f68]" />
+            Print PDF
+          </button>
+        </div>
+
+        {/* Quick Settle & UPI Trigger */}
+        <div className="pt-1 flex gap-2">
+          <button
+            onClick={onOpenSettlement}
+            className="flex-1 py-2 px-3 rounded-md bg-[#0d9488]/10 hover:bg-[#0d9488]/20 text-[#0d9488] border-2 border-[#0d9488]/40 text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-hard-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+          >
+            <Handshake className="w-3.5 h-3.5" />
+            Settle Balances
+          </button>
+          {currency === "INR" && (
+            <button
+              onClick={onOpenQR}
+              className="py-2 px-3 rounded-md bg-[#f5f2eb] hover:bg-[#ede7dc] dark:bg-[#1e2129] dark:hover:bg-white/10 text-xs font-mono font-bold border-2 border-[#1c1917] dark:border-[#2e323b] shadow-hard-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-1"
+              title="UPI Payment QR"
+            >
+              <QrCode className="w-3.5 h-3.5 text-[#e05332]" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

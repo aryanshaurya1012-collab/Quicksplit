@@ -534,12 +534,12 @@ export default function App() {
   }, [handleCopySummary, handleSaveHistory, toggleTheme, handleReset, playTick]);
 
   return (
-    <div className={`min-h-screen ${theme === "dark" ? "dark bg-[#0c0d12] text-slate-100" : "bg-[#f8fafc] text-slate-900"} font-sans transition-colors duration-200 selection:bg-indigo-500 selection:text-white flex flex-col justify-between`}>
+    <div className={`min-h-screen ${theme === "dark" ? "dark bg-[#0f1115] text-[#f5f2eb]" : "bg-[#f5f2eb] text-[#1f1d1a]"} font-sans transition-colors duration-200 selection:bg-[#e05332] selection:text-white flex flex-col justify-between`}>
       
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-2.5 rounded-full shadow-2xl bg-slate-900/95 text-white dark:bg-white dark:text-slate-900 text-xs sm:text-sm font-semibold backdrop-blur-md transition-all animate-bounce no-print">
-          <Sparkles className="w-4 h-4 text-amber-400" />
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-2.5 rounded-full shadow-2xl bg-[#1f1d1a] text-white dark:bg-white dark:text-[#1f1d1a] text-xs sm:text-sm font-mono font-bold backdrop-blur-md transition-all animate-bounce no-print border border-white/10">
+          <Sparkles className="w-4 h-4 text-[#fbbf24]" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -582,62 +582,124 @@ export default function App() {
           {/* VIEW TAB 1: SPLIT CALCULATOR */}
           {currentTab === "calc" && (
             <div>
-              {/* Split Mode Switcher Banner */}
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <span className="text-xs font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 block mb-0.5">
-                    Mode
-                  </span>
-                  <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
-                    {splitMode === "equal" ? "Equal Division" : "Itemized Order Check"}
-                  </h2>
+              {/* Tactical Division Switcher & Live Register Ticker */}
+              <div className="mb-6 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#15171c] p-3.5 sm:p-4 rounded-xl border-2 border-[#1c1917] dark:border-[#2e323b] shadow-hard">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-[#e05332] text-white flex items-center justify-center font-mono font-black text-lg shadow-hard-sm">
+                      {splitMode === "equal" ? "=" : "÷"}
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#e05332] dark:text-[#f97316] block">
+                        Operational Mode
+                      </span>
+                      <h2 className="text-lg sm:text-xl font-black font-heading tracking-tight text-[#1c1917] dark:text-[#f5f2eb]">
+                        {splitMode === "equal" ? "Equal Division Terminal" : "Itemized Consumer Ledger"}
+                      </h2>
+                    </div>
+                  </div>
+
+                  {/* Mode Buttons */}
+                  <div className="flex items-center p-1 rounded-lg bg-[#ede7dc] dark:bg-[#0f1115] border border-[#ded8cb] dark:border-white/10">
+                    <button
+                      onClick={() => {
+                        playTick();
+                        setSplitMode("equal");
+                      }}
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-mono font-bold transition-all cursor-pointer ${
+                        splitMode === "equal"
+                          ? "bg-white dark:bg-[#1e2129] text-[#e05332] shadow-hard-sm"
+                          : "text-[#756f68] hover:text-[#1c1917] dark:hover:text-white"
+                      }`}
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                      = Equal Split
+                    </button>
+                    <button
+                      onClick={() => {
+                        playTick();
+                        setSplitMode("itemized");
+                      }}
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-mono font-bold transition-all cursor-pointer ${
+                        splitMode === "itemized"
+                          ? "bg-white dark:bg-[#1e2129] text-[#0d9488] shadow-hard-sm"
+                          : "text-[#756f68] hover:text-[#1c1917] dark:hover:text-white"
+                      }`}
+                    >
+                      <Receipt className="w-3.5 h-3.5" />
+                      ÷ Itemized Check
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 shadow-inner">
-                  <button
-                    onClick={() => {
-                      playTick();
-                      setSplitMode("equal");
-                    }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      splitMode === "equal"
-                        ? "bg-white dark:bg-[#181a24] text-indigo-600 dark:text-indigo-400 shadow-sm"
-                        : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                    }`}
-                  >
-                    <Users className="w-3.5 h-3.5" />
-                    Equal Split
-                  </button>
-                  <button
-                    onClick={() => {
-                      playTick();
-                      setSplitMode("itemized");
-                    }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      splitMode === "itemized"
-                        ? "bg-white dark:bg-[#181a24] text-teal-600 dark:text-teal-400 shadow-sm"
-                        : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                    }`}
-                  >
-                    <Receipt className="w-3.5 h-3.5" />
-                    Itemized Order
-                  </button>
+                {/* Live Audit Ticker Ribbon */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-xs">
+                  <div className="bg-[#fdfbf7] dark:bg-[#15171c] p-2.5 rounded-lg border border-[#ded8cb] dark:border-white/10 flex items-center justify-between">
+                    <span className="text-[10px] text-[#756f68] uppercase">Subtotal</span>
+                    <span className="font-bold text-[#1c1917] dark:text-[#f5f2eb]">
+                      {formatCurrency(activeSplit.bill, currency)}
+                    </span>
+                  </div>
+                  <div className="bg-[#fdfbf7] dark:bg-[#15171c] p-2.5 rounded-lg border border-[#ded8cb] dark:border-white/10 flex items-center justify-between">
+                    <span className="text-[10px] text-[#756f68] uppercase">Tax &amp; Tip</span>
+                    <span className="font-bold text-[#0d9488]">
+                      +{formatCurrency(activeSplit.taxAmount + activeSplit.tipAmount, currency)}
+                    </span>
+                  </div>
+                  <div className="bg-[#fdfbf7] dark:bg-[#15171c] p-2.5 rounded-lg border border-[#ded8cb] dark:border-white/10 flex items-center justify-between">
+                    <span className="text-[10px] text-[#756f68] uppercase">Total Check</span>
+                    <span className="font-black text-[#e05332] dark:text-[#f97316]">
+                      {formatCurrency(activeSplit.total, currency)}
+                    </span>
+                  </div>
+                  <div className="bg-[#fdfbf7] dark:bg-[#15171c] p-2.5 rounded-lg border border-[#ded8cb] dark:border-white/10 flex items-center justify-between">
+                    <span className="text-[10px] text-[#756f68] uppercase">Crew Status</span>
+                    <span className="font-bold text-[#1c1917] dark:text-[#f5f2eb]">
+                      {friends.length} ({friends.filter(f => f.paid).length} Paid)
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* 12-Column Responsive Workspace */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                {/* Left Inputs (7 cols) */}
-                <div className="lg:col-span-7 space-y-6">
+              {/* 3-Zone Rearranged Tactical Workspace */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 items-start">
+                {/* Zone 1: Financial Inputs / Items Entry (4 cols) */}
+                <div className="lg:col-span-4 space-y-5">
                   {splitMode === "equal" ? (
-                    <EqualSplitForm
-                      billInput={billInput}
-                      setBillInput={setBillInput}
-                      currency={currency}
-                      billInputRef={billInputRef}
-                      playTick={playTick}
-                      playBlipDown={playBlipDown}
-                    />
+                    <>
+                      <EqualSplitForm
+                        billInput={billInput}
+                        setBillInput={setBillInput}
+                        currency={currency}
+                        billInputRef={billInputRef}
+                        playTick={playTick}
+                        playBlipDown={playBlipDown}
+                      />
+                      <TaxAndDiscount
+                        discountVal={discountVal}
+                        setDiscountVal={setDiscountVal}
+                        discountType={discountType}
+                        setDiscountType={setDiscountType}
+                        taxPercent={taxPercent}
+                        setTaxPercent={setTaxPercent}
+                        currency={currency}
+                        discountAmount={activeSplit.discountAmount}
+                        taxAmount={activeSplit.taxAmount}
+                        playTick={playTick}
+                      />
+                      <TipSelector
+                        tipPercent={tipPercent}
+                        setTipPercent={setTipPercent}
+                        isCustomTip={isCustomTip}
+                        setIsCustomTip={setIsCustomTip}
+                        customTipInput={customTipInput}
+                        setCustomTipInput={setCustomTipInput}
+                        activeTipRate={activeTipRate}
+                        tipAmount={activeSplit.tipAmount}
+                        currency={currency}
+                        playTipChime={playTipChime}
+                      />
+                    </>
                   ) : (
                     <ItemizedSplitForm
                       items={items}
@@ -652,36 +714,10 @@ export default function App() {
                       onOpenSampleReceipts={() => setShowSampleModal(true)}
                     />
                   )}
+                </div>
 
-                  {/* Adjustments: Discounts & Tax/GST */}
-                  <TaxAndDiscount
-                    discountVal={discountVal}
-                    setDiscountVal={setDiscountVal}
-                    discountType={discountType}
-                    setDiscountType={setDiscountType}
-                    taxPercent={taxPercent}
-                    setTaxPercent={setTaxPercent}
-                    currency={currency}
-                    discountAmount={activeSplit.discountAmount}
-                    taxAmount={activeSplit.taxAmount}
-                    playTick={playTick}
-                  />
-
-                  {/* Tip Gratuity Selector */}
-                  <TipSelector
-                    tipPercent={tipPercent}
-                    setTipPercent={setTipPercent}
-                    isCustomTip={isCustomTip}
-                    setIsCustomTip={setIsCustomTip}
-                    customTipInput={customTipInput}
-                    setCustomTipInput={setCustomTipInput}
-                    activeTipRate={activeTipRate}
-                    tipAmount={activeSplit.tipAmount}
-                    currency={currency}
-                    playTipChime={playTipChime}
-                  />
-
-                  {/* Group Management & Round-Up */}
+                {/* Zone 2: Crew Roster & Distribution Adjustments (4 cols) */}
+                <div className="lg:col-span-4 space-y-5">
                   <GroupManager
                     friends={friends}
                     setFriends={setFriends}
@@ -691,10 +727,39 @@ export default function App() {
                     showToast={showToast}
                     playTick={playTick}
                   />
+
+                  {splitMode === "itemized" && (
+                    <>
+                      <TaxAndDiscount
+                        discountVal={discountVal}
+                        setDiscountVal={setDiscountVal}
+                        discountType={discountType}
+                        setDiscountType={setDiscountType}
+                        taxPercent={taxPercent}
+                        setTaxPercent={setTaxPercent}
+                        currency={currency}
+                        discountAmount={activeSplit.discountAmount}
+                        taxAmount={activeSplit.taxAmount}
+                        playTick={playTick}
+                      />
+                      <TipSelector
+                        tipPercent={tipPercent}
+                        setTipPercent={setTipPercent}
+                        isCustomTip={isCustomTip}
+                        setIsCustomTip={setIsCustomTip}
+                        customTipInput={customTipInput}
+                        setCustomTipInput={setCustomTipInput}
+                        activeTipRate={activeTipRate}
+                        tipAmount={activeSplit.tipAmount}
+                        currency={currency}
+                        playTipChime={playTipChime}
+                      />
+                    </>
+                  )}
                 </div>
 
-                {/* Right Digital Receipt Card (5 cols) */}
-                <div className="lg:col-span-5">
+                {/* Zone 3: Perforated Thermal Receipt Slip & Action Deck (4 cols) */}
+                <div className="md:col-span-2 lg:col-span-4">
                   <ReceiptCard
                     splitMode={splitMode}
                     activeSplit={activeSplit}

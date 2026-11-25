@@ -17,7 +17,7 @@
   },
   {
     "id": "sushi_night",
-    "title": "🍣 Tokyo Sushi & Sake",
+    "title": "🍣 Tokyo Sushi & Sake Bar",
     "currency": "USD",
     "discount": 15,
     "discountType": "amount",
@@ -33,7 +33,7 @@
   },
   {
     "id": "weekend_brunch",
-    "title": "🥞 Sunday Cafe Brunch",
+    "title": "🥞 Sunday Artisan Cafe Brunch",
     "currency": "EUR",
     "discount": 0,
     "discountType": "percent",
@@ -42,9 +42,39 @@
     "items": [
       { "id": "b_1", "name": "Avocado Sourdough Toast", "price": "14", "sharedBy": ["p1"] },
       { "id": "b_2", "name": "Brioche French Toast", "price": "16", "sharedBy": ["p2"] },
-      { "id": "b_3", "name": "Eggs Benedict", "price": "18", "sharedBy": ["p3"] },
+      { "id": "b_3", "name": "Eggs Benedict Royale", "price": "18", "sharedBy": ["p3"] },
       { "id": "b_4", "name": "Smoothie Bowls x 2", "price": "18", "sharedBy": ["p2", "p4"] },
       { "id": "b_5", "name": "Flat Whites & Mimosas", "price": "26", "sharedBy": ["p1", "p2", "p3", "p4"] }
+    ]
+  },
+  {
+    "id": "roadtrip_fuel",
+    "title": "🚗 Mountain Roadtrip Gas & Snacks",
+    "currency": "USD",
+    "discount": 5,
+    "discountType": "amount",
+    "taxPercent": 6.5,
+    "tipPercent": 0,
+    "items": [
+      { "id": "r_1", "name": "Full Tank Gasoline", "price": "58", "sharedBy": ["p1", "p2", "p3", "p4"] },
+      { "id": "r_2", "name": "Energy Drinks & Cold Brew", "price": "19", "sharedBy": ["p1", "p3"] },
+      { "id": "r_3", "name": "Jerky, Trail Mix & Chips", "price": "24", "sharedBy": ["p1", "p2", "p3", "p4"] },
+      { "id": "r_4", "name": "Highway Toll Pass", "price": "15", "sharedBy": ["p1", "p2", "p3", "p4"] }
+    ]
+  },
+  {
+    "id": "team_coffee",
+    "title": "☕ Team Morning Coffee & Pastries",
+    "currency": "GBP",
+    "discount": 2,
+    "discountType": "amount",
+    "taxPercent": 0,
+    "tipPercent": 10,
+    "items": [
+      { "id": "c_1", "name": "Oat Milk Lattes x 2", "price": "8.50", "sharedBy": ["p1", "p2"] },
+      { "id": "c_2", "name": "Iced Americano", "price": "3.80", "sharedBy": ["p3"] },
+      { "id": "c_3", "name": "Matcha Tonic", "price": "4.60", "sharedBy": ["p4"] },
+      { "id": "c_4", "name": "Almond Croissants x 3", "price": "11.70", "sharedBy": ["p1", "p2", "p4"] }
     ]
   }
 ]

@@ -98,7 +98,7 @@
     // Update theme meta color
     var metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute("content", next === "dark" ? "#0e0c13" : "#6d4aff");
+      metaThemeColor.setAttribute("content", next === "dark" ? "#0f1115" : "#e05332");
     }
 
     if (themeToggle) {

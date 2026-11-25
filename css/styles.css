@@ -3,90 +3,84 @@
    ========================================================================== */
 
 :root {
-  --font-display: "Syne", "Avenir Next", "Segoe UI", sans-serif;
-  --font-body: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", "Cascadia Mono", monospace;
+  --font-display: "Space Grotesk", "Avenir Next", sans-serif;
+  --font-body: "Manrope", "Segoe UI", sans-serif;
+  --font-mono: "Space Mono", monospace;
 
-  /* Accent Colors */
-  --violet: #6d4aff;
-  --violet-hover: #5835f0;
-  --violet-soft: rgba(109, 74, 255, 0.1);
-  --coral: #ff5e62;
-  --coral-soft: rgba(255, 94, 98, 0.12);
-  --teal: #14b8a6;
-  --teal-soft: rgba(20, 184, 166, 0.12);
-  --yellow: #f59e0b;
-  --yellow-soft: rgba(245, 158, 11, 0.14);
+  /* Editorial Craft Accent Colors */
+  --terracotta: #e05332;
+  --terracotta-hover: #c84324;
+  --terracotta-soft: rgba(224, 83, 50, 0.1);
+  --amber: #d97706;
+  --amber-soft: rgba(217, 119, 6, 0.12);
+  --forest: #0d9488;
+  --forest-soft: rgba(13, 148, 136, 0.12);
+  --ink: #1f1d1a;
+
+  /* Aliases for Craft Studio theme sync */
+  --violet: var(--terracotta);
+  --violet-hover: var(--terracotta-hover);
+  --violet-soft: var(--terracotta-soft);
+  --coral: var(--amber);
+  --teal: var(--forest);
 
   /* Radius & Shadows */
-  --radius-xs: 8px;
-  --radius-sm: 12px;
-  --radius-md: 18px;
-  --radius-lg: 24px;
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 2px 8px rgba(35, 20, 10, 0.04);
-  --shadow-md: 0 10px 30px rgba(35, 20, 10, 0.07);
-  --shadow-lg: 0 20px 50px rgba(35, 20, 10, 0.1);
-  --focus-ring: 0 0 0 3px rgba(109, 74, 255, 0.28);
+  --shadow-sm: 0 2px 6px rgba(35, 20, 10, 0.04);
+  --shadow-md: 0 8px 24px rgba(35, 20, 10, 0.06);
+  --shadow-lg: 0 16px 40px rgba(35, 20, 10, 0.08);
+  --focus-ring: 0 0 0 3px rgba(224, 83, 50, 0.25);
 
   --header-h: 4.25rem;
   --container: 1120px;
   --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* Light Theme Variables */
+  /* Warm Paper Light Theme Variables */
   color-scheme: light;
-  --bg: #f8f5f0;
+  --bg: #f5f2eb;
   --bg-accent: #ede7dc;
   --surface: #ffffff;
-  --surface-2: #fcfbfa;
+  --surface-2: #faf8f5;
   --surface-elevated: #ffffff;
-  --text: #1d1916;
-  --text-muted: #645a50;
-  --text-subtle: #8e8377;
-  --border: rgba(60, 45, 30, 0.1);
-  --border-strong: #6d4aff;
+  --text: #1f1d1a;
+  --text-muted: #645f57;
+  --text-subtle: #8a8479;
+  --border: rgba(60, 45, 30, 0.12);
+  --border-strong: #e05332;
   --receipt-bg: #fffdf9;
-  --receipt-border: #e9e3d8;
-  --hero-blob-a: rgba(109, 74, 255, 0.14);
-  --hero-blob-b: rgba(255, 94, 98, 0.12);
-  --hero-blob-c: rgba(20, 184, 166, 0.12);
-  --nav-bg: rgba(248, 245, 240, 0.85);
-  --danger: #ef4444;
-  --success: #10b981;
+  --receipt-border: #e6ded1;
+  --nav-bg: rgba(245, 242, 235, 0.9);
+  --danger: #dc2626;
+  --success: #15803d;
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0e0c13;
-  --bg-accent: #16131d;
-  --surface: #1a1624;
-  --surface-2: #211c2e;
-  --surface-elevated: #272236;
+  --bg: #0f1115;
+  --bg-accent: #171920;
+  --surface: #181a20;
+  --surface-2: #21242d;
+  --surface-elevated: #282b36;
   --text: #f5f2eb;
   --text-muted: #a39cae;
   --text-subtle: #797184;
   --border: rgba(255, 255, 255, 0.08);
-  --border-strong: #8b68ff;
-  --violet: #8b68ff;
-  --violet-hover: #7b53ff;
-  --violet-soft: rgba(139, 104, 255, 0.18);
-  --coral: #ff7074;
-  --coral-soft: rgba(255, 112, 116, 0.16);
-  --teal: #2dd4bf;
-  --teal-soft: rgba(45, 212, 191, 0.16);
-  --yellow: #fbbf24;
-  --yellow-soft: rgba(251, 191, 36, 0.16);
-  --receipt-bg: #1c1827;
+  --border-strong: #e05332;
+  --receipt-bg: #1a1c24;
   --receipt-border: rgba(255, 255, 255, 0.08);
-  --hero-blob-a: rgba(139, 104, 255, 0.22);
-  --hero-blob-b: rgba(255, 112, 116, 0.16);
-  --hero-blob-c: rgba(45, 212, 191, 0.16);
-  --nav-bg: rgba(14, 12, 19, 0.88);
+  --hero-blob-a: rgba(224, 83, 50, 0.18);
+  --hero-blob-b: rgba(217, 119, 6, 0.14);
+  --hero-blob-c: rgba(13, 148, 136, 0.14);
+  --nav-bg: rgba(15, 17, 21, 0.9);
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 12px 36px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.65);
-  --focus-ring: 0 0 0 3px rgba(139, 104, 255, 0.38);
+  --focus-ring: 0 0 0 3px rgba(224, 83, 50, 0.35);
   --danger: #f87171;
   --success: #34d399;
 }

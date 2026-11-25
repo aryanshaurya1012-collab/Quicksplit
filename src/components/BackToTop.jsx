@@ -20,7 +20,7 @@ export default function BackToTop({ playTick }) {
         if (playTick) playTick();
         window.scrollTo({ top: 0, behavior: "smooth" });
       }}
-      className="fixed bottom-6 right-6 z-40 p-3 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl hover:shadow-indigo-500/30 active:scale-95 transition-all duration-200 cursor-pointer no-print animate-pop"
+      className="fixed bottom-6 right-6 z-40 p-3 rounded-full bg-[#e05332] hover:bg-[#c84324] text-white shadow-xl hover:shadow-[#e05332]/30 active:scale-95 transition-all duration-200 cursor-pointer no-print animate-pop"
       aria-label="Back to top"
       title="Back to top"
     >
