@@ -4,6 +4,7 @@ export * from "./utils/receipt.js";
 export * from "./utils/settlement.js";
 export * from "./utils/parser.js";
 export * from "./utils/csv.js";
+export * from "./utils/shareLink.js";
 
 // Backwards compatibility for playSoftClick
 let audioCtx = null;

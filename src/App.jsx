@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import confetti from "canvas-confetti";
-import { Sparkles, Users, Receipt } from "lucide-react";
+import { Sparkles, Users, Receipt, Share2 } from "lucide-react";
 
 // Constants & Utilities
 import {
@@ -15,7 +15,9 @@ import {
   calculateItemizedSplit,
   buildReceiptSummary,
   calculateSettlements,
-  exportToCSV
+  exportToCSV,
+  getShareableUrl,
+  decodeSessionState
 } from "./utils";
 
 // Custom Hooks
@@ -24,26 +26,28 @@ import { useAudioHaptics } from "./hooks/useAudioHaptics";
 
 // Modular Components
 import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
-import HowItWorks from "./components/HowItWorks";
+import SessionHeader from "./components/SessionHeader";
 import EqualSplitForm from "./components/EqualSplitForm";
 import ItemizedSplitForm from "./components/ItemizedSplitForm";
 import TaxAndDiscount from "./components/TaxAndDiscount";
 import TipSelector from "./components/TipSelector";
 import GroupManager from "./components/GroupManager";
 import ReceiptCard from "./components/ReceiptCard";
-import RecentSplits from "./components/RecentSplits";
-import FaqSection from "./components/FaqSection";
-import AboutSection from "./components/AboutSection";
+import SettlementLedgerView from "./components/SettlementLedgerView";
+import AnalyticsView from "./components/AnalyticsView";
+import HistoryView from "./components/HistoryView";
+import Footer from "./components/Footer";
+import BackToTop from "./components/BackToTop";
+
+// Modals
 import UpiModal from "./components/UpiModal";
 import SettlementModal from "./components/SettlementModal";
 import SmartPasteModal from "./components/SmartPasteModal";
 import SampleReceiptsModal from "./components/SampleReceiptsModal";
-import Footer from "./components/Footer";
-import BackToTop from "./components/BackToTop";
+import HelpModal from "./components/HelpModal";
 
 export default function App() {
-  // Theme & Sound Custom Hooks
+  // Theme & Audio Custom Hooks
   const { theme, toggleTheme } = useTheme();
   const {
     soundEnabled,
@@ -53,6 +57,13 @@ export default function App() {
     playTick,
     playBlipDown
   } = useAudioHaptics();
+
+  // Active View Tab: "calc" | "settle" | "analytics" | "history"
+  const [currentTab, setCurrentTab] = useState("calc");
+
+  // Session Meta
+  const [sessionTitle, setSessionTitle] = useState("Friday Dinner");
+  const [sessionCategory, setSessionCategory] = useState("Dining");
 
   // App Core State
   const [splitMode, setSplitMode] = useState("equal");
@@ -74,7 +85,7 @@ export default function App() {
 
   // Discounts & Taxes State
   const [discountVal, setDiscountVal] = useState(0);
-  const [discountType, setDiscountType] = useState("percent"); // "percent" or "amount"
+  const [discountType, setDiscountType] = useState("percent"); // "percent" or "flat"
   const [taxPercent, setTaxPercent] = useState(0);
 
   // Group State
@@ -93,6 +104,7 @@ export default function App() {
   const [showSettlementModal, setShowSettlementModal] = useState(false);
   const [showSmartPasteModal, setShowSmartPasteModal] = useState(false);
   const [showSampleModal, setShowSampleModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   const [history, setHistory] = useState(() => {
     try {
@@ -104,6 +116,52 @@ export default function App() {
   });
 
   const billInputRef = useRef(null);
+
+  // Toast feedback helper
+  const showToast = useCallback((msg) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage("");
+    }, 2800);
+  }, []);
+
+  // Deep-Link Synchronization on Initial Mount
+  useEffect(() => {
+    try {
+      let code = "";
+      if (window.location.hash.startsWith("#share=")) {
+        code = window.location.hash.replace("#share=", "");
+      } else {
+        const params = new URLSearchParams(window.location.search);
+        code = params.get("share") || "";
+      }
+
+      if (code) {
+        const restored = decodeSessionState(code);
+        if (restored) {
+          if (restored.title) setSessionTitle(restored.title);
+          if (restored.category) setSessionCategory(restored.category);
+          if (restored.currency) setCurrency(restored.currency);
+          if (restored.splitMode) setSplitMode(restored.splitMode);
+          if (restored.billInput !== undefined) setBillInput(restored.billInput);
+          if (restored.tipPercent !== undefined) {
+            setTipPercent(restored.tipPercent);
+            setIsCustomTip(!TIP_PRESETS.includes(restored.tipPercent));
+          }
+          if (restored.roundUp !== undefined) setRoundUp(restored.roundUp);
+          if (restored.discountVal !== undefined) setDiscountVal(restored.discountVal);
+          if (restored.discountType !== undefined) setDiscountType(restored.discountType);
+          if (restored.taxPercent !== undefined) setTaxPercent(restored.taxPercent);
+          if (Array.isArray(restored.friends) && restored.friends.length > 0) setFriends(restored.friends);
+          if (Array.isArray(restored.items) && restored.items.length > 0) setItems(restored.items);
+
+          showToast(`Loaded shared check: "${restored.title}" ✨`);
+        }
+      }
+    } catch (e) {
+      console.warn("Could not parse deep link", e);
+    }
+  }, [showToast]);
 
   // Persist currency
   useEffect(() => {
@@ -118,23 +176,6 @@ export default function App() {
       localStorage.setItem("quicksplit-history", JSON.stringify(history));
     } catch {}
   }, [history]);
-
-  // Toast feedback helper
-  const showToast = useCallback((msg) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage("");
-    }, 2800);
-  }, []);
-
-  // Smooth scroll handler
-  const scrollToSection = useCallback((id) => {
-    playTick();
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [playTick]);
 
   // Numerical bill parse
   const numericBill = useMemo(() => {
@@ -205,7 +246,6 @@ export default function App() {
       ? itemizedSplit.breakdown
       : friends.map((f) => ({ ...f, totalShare: activeSplit.perPerson }));
 
-    // Assume first person paid by default for text generation unless custom
     const party = friendShares.map((f, idx) => ({
       ...f,
       paidAmount: idx === 0 ? activeSplit.total : 0
@@ -213,6 +253,34 @@ export default function App() {
 
     return calculateSettlements(party, currency);
   }, [splitMode, itemizedSplit, friends, activeSplit, currency]);
+
+  // Deep-Link Share URL Handler
+  const handleShareLink = useCallback(() => {
+    playTick();
+    const currentState = {
+      title: sessionTitle,
+      category: sessionCategory,
+      currency,
+      splitMode,
+      billInput,
+      tipPercent: activeTipRate,
+      roundUp,
+      discountVal,
+      discountType,
+      taxPercent,
+      friends,
+      items
+    };
+
+    const url = getShareableUrl(currentState);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast("Shareable link copied! Send to your friends ✨");
+      });
+    } else {
+      showToast("Link: " + url);
+    }
+  }, [sessionTitle, sessionCategory, currency, splitMode, billInput, activeTipRate, roundUp, discountVal, discountType, taxPercent, friends, items, playTick, showToast]);
 
   // Save calculation to local history
   const handleSaveHistory = useCallback((silent = false) => {
@@ -223,6 +291,8 @@ export default function App() {
 
     const entry = {
       id: String(Date.now()),
+      title: sessionTitle,
+      category: sessionCategory,
       mode: splitMode,
       bill: activeSplit.bill,
       discountVal,
@@ -244,14 +314,14 @@ export default function App() {
 
     setHistory((prev) => [
       entry,
-      ...prev.filter((i) => i.bill !== entry.bill || i.total !== entry.total || i.mode !== entry.mode)
-    ].slice(0, 10));
+      ...prev.filter((i) => i.id !== entry.id)
+    ].slice(0, 20));
 
     if (!silent) {
       playSuccessChime();
-      showToast("Split saved to Recent Splits! 💾");
+      showToast("Check saved to local history! 💾");
     }
-  }, [activeSplit, splitMode, friends, currency, items, discountVal, discountType, taxPercent, showToast, playSuccessChime]);
+  }, [activeSplit, sessionTitle, sessionCategory, splitMode, friends, currency, items, discountVal, discountType, taxPercent, showToast, playSuccessChime]);
 
   // Copy receipt summary to clipboard
   const handleCopySummary = useCallback(async () => {
@@ -273,7 +343,7 @@ export default function App() {
         spread: 60,
         origin: { y: 0.65 }
       });
-      showToast("Receipt copied! Ready to paste in WhatsApp/chat ✨");
+      showToast("Receipt copied! Ready to paste in WhatsApp/Slack ✨");
     } catch {
       showToast("Could not access clipboard");
     }
@@ -293,7 +363,7 @@ export default function App() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "QuickSplit — Bill Summary",
+          title: `QuickSplit — ${sessionTitle}`,
           text
         });
         handleSaveHistory(true);
@@ -306,7 +376,7 @@ export default function App() {
     } else {
       handleCopySummary();
     }
-  }, [activeSplit, splitMode, itemizedSplit, friends, currency, items, settlements, handleSaveHistory, handleCopySummary, showToast]);
+  }, [activeSplit, sessionTitle, splitMode, itemizedSplit, friends, currency, items, settlements, handleSaveHistory, handleCopySummary, showToast]);
 
   // Print formatted receipt
   const handlePrint = useCallback(() => {
@@ -350,6 +420,8 @@ export default function App() {
   // Restore history split
   const handleRestoreHistory = useCallback((item) => {
     playTick();
+    if (item.title) setSessionTitle(item.title);
+    if (item.category) setSessionCategory(item.category);
     setCurrency(item.currency || DEFAULT_CURRENCY);
     setSplitMode(item.mode || "equal");
 
@@ -374,14 +446,14 @@ export default function App() {
       setFriends(item.friends.map((f) => ({ ...f, paid: false })));
     }
 
-    showToast(`Restored split of ${formatCurrency(item.bill, item.currency)}`);
-    const calcElement = document.getElementById("calculator");
-    if (calcElement) calcElement.scrollIntoView({ behavior: "smooth" });
+    setCurrentTab("calc");
+    showToast(`Restored: ${item.title || "Bill Split"}! ✨`);
   }, [playTick, showToast]);
 
   // Load a preset sample receipt
   const handleLoadSample = useCallback((sample) => {
     playSuccessChime();
+    setSessionTitle(sample.title.replace(/^[^a-zA-Z0-9]+/, "").trim());
     setCurrency(sample.currency);
     setSplitMode("itemized");
     setItems(sample.items);
@@ -391,22 +463,20 @@ export default function App() {
     setTipPercent(sample.tipPercent || 15);
     setIsCustomTip(false);
     showToast(`Loaded ${sample.title}! ✨`);
-    const calcElement = document.getElementById("calculator");
-    if (calcElement) calcElement.scrollIntoView({ behavior: "smooth" });
   }, [playSuccessChime, showToast]);
 
   // Import parsed items from Smart Paste
   const handleImportParsedItems = useCallback((newParsedItems) => {
     setSplitMode("itemized");
     setItems((prev) => [...prev, ...newParsedItems]);
-  }, []);
+    showToast(`Imported ${newParsedItems.length} items from receipt text! 📋`);
+  }, [showToast]);
 
   // Delete history split
-  const handleDeleteHistory = useCallback((id, e) => {
-    e.stopPropagation();
+  const handleDeleteHistory = useCallback((id) => {
     playBlipDown();
     setHistory((prev) => prev.filter((item) => item.id !== id));
-    showToast("Split removed from history");
+    showToast("Bill removed from history");
   }, [playBlipDown, showToast]);
 
   // Clear all history
@@ -424,7 +494,7 @@ export default function App() {
     );
   }, [playTick]);
 
-  // Keyboard Shortcuts (C, S, T, M, R)
+  // Keyboard Shortcuts (1-4, C, S, T, M, R)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName)) {
@@ -432,7 +502,15 @@ export default function App() {
       }
 
       const key = e.key.toLowerCase();
-      if (key === "c") {
+      if (key === "1") {
+        setCurrentTab("calc");
+      } else if (key === "2") {
+        setCurrentTab("settle");
+      } else if (key === "3") {
+        setCurrentTab("analytics");
+      } else if (key === "4") {
+        setCurrentTab("history");
+      } else if (key === "c") {
         e.preventDefault();
         handleCopySummary();
       } else if (key === "s") {
@@ -456,247 +534,279 @@ export default function App() {
   }, [handleCopySummary, handleSaveHistory, toggleTheme, handleReset, playTick]);
 
   return (
-    <div className={`min-h-screen ${theme === "dark" ? "dark bg-[#0b0914] text-slate-100" : "bg-slate-50 text-slate-900"} font-sans transition-colors duration-200 selection:bg-indigo-500 selection:text-white`}>
+    <div className={`min-h-screen ${theme === "dark" ? "dark bg-[#0c0d12] text-slate-100" : "bg-[#f8fafc] text-slate-900"} font-sans transition-colors duration-200 selection:bg-indigo-500 selection:text-white flex flex-col justify-between`}>
+      
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-2.5 rounded-full shadow-2xl bg-slate-900/95 text-white dark:bg-white dark:text-slate-900 text-xs sm:text-sm font-semibold backdrop-blur-md transition-all animate-bounce">
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-2.5 rounded-full shadow-2xl bg-slate-900/95 text-white dark:bg-white dark:text-slate-900 text-xs sm:text-sm font-semibold backdrop-blur-md transition-all animate-bounce no-print">
           <Sparkles className="w-4 h-4 text-amber-400" />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* Modern Sticky Navbar */}
-      <Navbar
-        theme={theme}
-        toggleTheme={toggleTheme}
-        soundEnabled={soundEnabled}
-        toggleSound={toggleSound}
-        currency={currency}
-        setCurrency={setCurrency}
-        splitMode={splitMode}
-        setSplitMode={setSplitMode}
-        onNavigate={scrollToSection}
-        playTick={playTick}
-      />
-
-      {/* Main Content Sections */}
-      <main id="top" className="max-w-6xl mx-auto px-4 sm:px-6">
-        
-        {/* Hero Section */}
-        <Hero
+      <div>
+        {/* Modern Fintech Sticky Navbar */}
+        <Navbar
+          currentTab={currentTab}
+          setCurrentTab={setCurrentTab}
           currency={currency}
-          onStartSplitting={() => scrollToSection("calculator")}
-          onSeeHowItWorks={() => scrollToSection("how-it-works")}
-          playTipChime={playTipChime}
+          setCurrency={setCurrency}
+          theme={theme}
+          toggleTheme={toggleTheme}
+          soundEnabled={soundEnabled}
+          toggleSound={toggleSound}
+          onShareLink={handleShareLink}
+          onOpenHelp={() => setShowHelpModal(true)}
           playTick={playTick}
         />
 
-        {/* How It Works Section */}
-        <HowItWorks />
-
-        {/* Live Interactive Calculator Section */}
-        <section id="calculator" className="py-12 border-t border-slate-200/80 dark:border-white/5 scroll-mt-20">
+        {/* Main Application Container */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-12 w-full">
           
-          {/* Section Header with Mode Switcher & Quick Load Samples */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          {/* Top Session Context Header */}
+          <SessionHeader
+            sessionTitle={sessionTitle}
+            setSessionTitle={setSessionTitle}
+            sessionCategory={sessionCategory}
+            setSessionCategory={setSessionCategory}
+            currency={currency}
+            totalCheck={activeSplit.total}
+            peopleCount={friends.length}
+            onOpenSmartPaste={() => setShowSmartPasteModal(true)}
+            onOpenSampleReceipts={() => setShowSampleModal(true)}
+            onShareLink={handleShareLink}
+            onReset={handleReset}
+            playTick={playTick}
+          />
+
+          {/* VIEW TAB 1: SPLIT CALCULATOR */}
+          {currentTab === "calc" && (
             <div>
-              <span className="text-xs font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 block mb-1">
-                Live Calculator
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                {splitMode === "equal" ? "Equal Bill Split" : "Itemized Order Split"}
-              </h2>
-            </div>
+              {/* Split Mode Switcher Banner */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <span className="text-xs font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 block mb-0.5">
+                    Mode
+                  </span>
+                  <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
+                    {splitMode === "equal" ? "Equal Division" : "Itemized Order Check"}
+                  </h2>
+                </div>
 
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Load Example Check Button */}
-              <button
-                type="button"
-                onClick={() => setShowSampleModal(true)}
-                className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 border border-amber-200/80 dark:border-amber-800/60 text-xs font-bold text-amber-700 dark:text-amber-300 transition-all cursor-pointer shadow-xs active:scale-95"
-              >
-                🍕 Sample Checks
-              </button>
+                <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 shadow-inner">
+                  <button
+                    onClick={() => {
+                      playTick();
+                      setSplitMode("equal");
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      splitMode === "equal"
+                        ? "bg-white dark:bg-[#181a24] text-indigo-600 dark:text-indigo-400 shadow-sm"
+                        : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                    }`}
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    Equal Split
+                  </button>
+                  <button
+                    onClick={() => {
+                      playTick();
+                      setSplitMode("itemized");
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      splitMode === "itemized"
+                        ? "bg-white dark:bg-[#181a24] text-teal-600 dark:text-teal-400 shadow-sm"
+                        : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                    }`}
+                  >
+                    <Receipt className="w-3.5 h-3.5" />
+                    Itemized Order
+                  </button>
+                </div>
+              </div>
 
-              {/* Mode Switcher Buttons */}
-              <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 shadow-inner">
-                <button
-                  onClick={() => {
-                    playTick();
-                    setSplitMode("equal");
-                  }}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    splitMode === "equal"
-                      ? "bg-white dark:bg-[#181428] text-indigo-600 dark:text-indigo-400 shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                  }`}
-                >
-                  <Users className="w-3.5 h-3.5" />
-                  ⚡ Equal
-                </button>
-                <button
-                  onClick={() => {
-                    playTick();
-                    setSplitMode("itemized");
-                  }}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    splitMode === "itemized"
-                      ? "bg-white dark:bg-[#181428] text-teal-600 dark:text-teal-400 shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                  }`}
-                >
-                  <Receipt className="w-3.5 h-3.5" />
-                  🧾 Itemized
-                </button>
+              {/* 12-Column Responsive Workspace */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Left Inputs (7 cols) */}
+                <div className="lg:col-span-7 space-y-6">
+                  {splitMode === "equal" ? (
+                    <EqualSplitForm
+                      billInput={billInput}
+                      setBillInput={setBillInput}
+                      currency={currency}
+                      billInputRef={billInputRef}
+                      playTick={playTick}
+                      playBlipDown={playBlipDown}
+                    />
+                  ) : (
+                    <ItemizedSplitForm
+                      items={items}
+                      setItems={setItems}
+                      friends={friends}
+                      currency={currency}
+                      subtotal={itemizedSplit.subtotal}
+                      showToast={showToast}
+                      playTick={playTick}
+                      playBlipDown={playBlipDown}
+                      onOpenSmartPaste={() => setShowSmartPasteModal(true)}
+                      onOpenSampleReceipts={() => setShowSampleModal(true)}
+                    />
+                  )}
+
+                  {/* Adjustments: Discounts & Tax/GST */}
+                  <TaxAndDiscount
+                    discountVal={discountVal}
+                    setDiscountVal={setDiscountVal}
+                    discountType={discountType}
+                    setDiscountType={setDiscountType}
+                    taxPercent={taxPercent}
+                    setTaxPercent={setTaxPercent}
+                    currency={currency}
+                    discountAmount={activeSplit.discountAmount}
+                    taxAmount={activeSplit.taxAmount}
+                    playTick={playTick}
+                  />
+
+                  {/* Tip Gratuity Selector */}
+                  <TipSelector
+                    tipPercent={tipPercent}
+                    setTipPercent={setTipPercent}
+                    isCustomTip={isCustomTip}
+                    setIsCustomTip={setIsCustomTip}
+                    customTipInput={customTipInput}
+                    setCustomTipInput={setCustomTipInput}
+                    activeTipRate={activeTipRate}
+                    tipAmount={activeSplit.tipAmount}
+                    currency={currency}
+                    playTipChime={playTipChime}
+                  />
+
+                  {/* Group Management & Round-Up */}
+                  <GroupManager
+                    friends={friends}
+                    setFriends={setFriends}
+                    setItems={setItems}
+                    roundUp={roundUp}
+                    setRoundUp={setRoundUp}
+                    showToast={showToast}
+                    playTick={playTick}
+                  />
+                </div>
+
+                {/* Right Digital Receipt Card (5 cols) */}
+                <div className="lg:col-span-5">
+                  <ReceiptCard
+                    splitMode={splitMode}
+                    activeSplit={activeSplit}
+                    itemizedSplit={itemizedSplit}
+                    currency={currency}
+                    friends={friends}
+                    items={items}
+                    toggleFriendPaid={toggleFriendPaid}
+                    onCopy={handleCopySummary}
+                    onShare={handleShare}
+                    onSave={() => handleSaveHistory(false)}
+                    onPrint={handlePrint}
+                    onReset={handleReset}
+                    onOpenQR={() => setShowQRModal(true)}
+                    onOpenSettlement={() => setCurrentTab("settle")}
+                    onExportCSV={handleExportCSV}
+                    onCopyShareableLink={handleShareLink}
+                    showToast={showToast}
+                    playTick={playTick}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* 12-Column Responsive Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-            
-            {/* Left Inputs (7 cols) */}
-            <div className="lg:col-span-7 space-y-6">
-              {splitMode === "equal" ? (
-                <EqualSplitForm
-                  billInput={billInput}
-                  setBillInput={setBillInput}
-                  currency={currency}
-                  billInputRef={billInputRef}
-                  playTick={playTick}
-                  playBlipDown={playBlipDown}
-                />
-              ) : (
-                <ItemizedSplitForm
-                  items={items}
-                  setItems={setItems}
-                  friends={friends}
-                  currency={currency}
-                  subtotal={itemizedSplit.subtotal}
-                  showToast={showToast}
-                  playTick={playTick}
-                  playBlipDown={playBlipDown}
-                  onOpenSmartPaste={() => setShowSmartPasteModal(true)}
-                  onOpenSampleReceipts={() => setShowSampleModal(true)}
-                />
-              )}
+          {/* VIEW TAB 2: SETTLEMENT LEDGER */}
+          {currentTab === "settle" && (
+            <SettlementLedgerView
+              friends={friends}
+              setFriends={setFriends}
+              itemizedSplit={itemizedSplit}
+              activeSplit={activeSplit}
+              splitMode={splitMode}
+              currency={currency}
+              onOpenQR={() => setShowQRModal(true)}
+              showToast={showToast}
+              playTick={playTick}
+            />
+          )}
 
-              {/* Discounts & Sales Tax / GST Panel */}
-              <TaxAndDiscount
-                discountVal={discountVal}
-                setDiscountVal={setDiscountVal}
-                discountType={discountType}
-                setDiscountType={setDiscountType}
-                taxPercent={taxPercent}
-                setTaxPercent={setTaxPercent}
-                currency={currency}
-                discountAmount={activeSplit.discountAmount}
-                taxAmount={activeSplit.taxAmount}
-                playTick={playTick}
-              />
+          {/* VIEW TAB 3: ANALYTICS & AUDIT */}
+          {currentTab === "analytics" && (
+            <AnalyticsView
+              friends={friends}
+              items={items}
+              itemizedSplit={itemizedSplit}
+              activeSplit={activeSplit}
+              splitMode={splitMode}
+              currency={currency}
+              onExportCSV={handleExportCSV}
+              onPrint={handlePrint}
+              playTick={playTick}
+            />
+          )}
 
-              {/* Tip Rate Selector */}
-              <TipSelector
-                tipPercent={tipPercent}
-                setTipPercent={setTipPercent}
-                isCustomTip={isCustomTip}
-                setIsCustomTip={setIsCustomTip}
-                customTipInput={customTipInput}
-                setCustomTipInput={setCustomTipInput}
-                activeTipRate={activeTipRate}
-                tipAmount={activeSplit.tipAmount}
-                currency={currency}
-                playTipChime={playTipChime}
-              />
+          {/* VIEW TAB 4: HISTORY ARCHIVES */}
+          {currentTab === "history" && (
+            <HistoryView
+              history={history}
+              onRestoreSplit={handleRestoreHistory}
+              onDeleteSplit={handleDeleteHistory}
+              onClearHistory={handleClearAllHistory}
+              currency={currency}
+              showToast={showToast}
+              playTick={playTick}
+            />
+          )}
 
-              {/* Group & Friends Management */}
-              <GroupManager
-                friends={friends}
-                setFriends={setFriends}
-                setItems={setItems}
-                roundUp={roundUp}
-                setRoundUp={setRoundUp}
-                showToast={showToast}
-                playTick={playTick}
-                playBlipDown={playBlipDown}
-              />
-            </div>
+        </main>
+      </div>
 
-            {/* Right Sticky Receipt Card (5 cols) */}
-            <div className="lg:col-span-5">
-              <ReceiptCard
-                splitMode={splitMode}
-                activeSplit={activeSplit}
-                itemizedSplit={itemizedSplit}
-                currency={currency}
-                friends={friends}
-                items={items}
-                toggleFriendPaid={toggleFriendPaid}
-                onCopy={handleCopySummary}
-                onShare={handleShare}
-                onSave={() => handleSaveHistory(false)}
-                onPrint={handlePrint}
-                onReset={handleReset}
-                onOpenQR={() => setShowQRModal(true)}
-                onOpenSettlement={() => setShowSettlementModal(true)}
-                onExportCSV={handleExportCSV}
-                showToast={showToast}
-                playTick={playTick}
-              />
-            </div>
+      {/* Modern Clean Footer */}
+      <Footer
+        onSelectTab={(tabId) => setCurrentTab(tabId)}
+        onOpenHelp={() => setShowHelpModal(true)}
+        playTick={playTick}
+      />
 
-          </div>
-        </section>
+      {/* Floating Back to Top Button */}
+      <BackToTop playTick={playTick} />
 
-        {/* Recent Splits Section */}
-        <RecentSplits
-          history={history}
-          onRestore={handleRestoreHistory}
-          onDelete={handleDeleteHistory}
-          onClearAll={handleClearAllHistory}
-        />
-
-        {/* FAQ Accordion Section */}
-        <FaqSection />
-
-        {/* About QuickSplit Section */}
-        <AboutSection />
-
-      </main>
-
-      {/* 100% Offline UPI QR Modal */}
+      {/* Modals & Dialogs */}
       <UpiModal
         isOpen={showQRModal}
         onClose={() => setShowQRModal(false)}
-        amount={splitMode === "itemized" && friends.length > 0 ? (activeSplit.total / friends.length) : activeSplit.perPerson}
+        amount={splitMode === "itemized" ? itemizedSplit.total : activeSplit.total}
+        currency={currency}
         showToast={showToast}
         playTick={playTick}
       />
 
-      {/* Multi-Payer Debt Settlement Modal (Who Owes Whom) */}
       <SettlementModal
         isOpen={showSettlementModal}
         onClose={() => setShowSettlementModal(false)}
-        friends={splitMode === "itemized" ? itemizedSplit.breakdown : friends.map((f) => ({ ...f, totalShare: activeSplit.perPerson }))}
+        friends={friends}
         setFriends={setFriends}
-        totalCheck={activeSplit.total}
+        totalCheck={splitMode === "itemized" ? itemizedSplit.total : activeSplit.total}
         currency={currency}
         showToast={showToast}
         playTick={playTick}
       />
 
-      {/* Smart Receipt Text Parser Modal */}
       <SmartPasteModal
         isOpen={showSmartPasteModal}
         onClose={() => setShowSmartPasteModal(false)}
-        friends={friends}
-        currency={currency}
         onImportItems={handleImportParsedItems}
+        defaultFriends={friends}
+        currency={currency}
         showToast={showToast}
         playTick={playTick}
       />
 
-      {/* Preset Sample Receipts Modal */}
       <SampleReceiptsModal
         isOpen={showSampleModal}
         onClose={() => setShowSampleModal(false)}
@@ -704,11 +814,11 @@ export default function App() {
         playTick={playTick}
       />
 
-      {/* Floating Back to Top Button */}
-      <BackToTop playTick={playTick} />
+      <HelpModal
+        isOpen={showHelpModal}
+        onClose={() => setShowHelpModal(false)}
+      />
 
-      {/* Site Footer */}
-      <Footer onNavigate={scrollToSection} />
     </div>
   );
 }

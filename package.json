@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node scripts/verify-math.js"
+    "test": "node scripts/verify-math.js",
+    "benchmark": "node scripts/benchmark.js"
   },
   "repository": {
     "type": "git",
